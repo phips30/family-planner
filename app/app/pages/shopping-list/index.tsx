@@ -76,6 +76,12 @@ export default function ShoppingList() {
         }
     }
 
+    function removeItem(itemToDelete: ShoppingItem, props: { size: number }) {
+        setShoppingList(shoppingList.filter(item => item.name !== itemToDelete.name));
+        InMemoryDb.storeObject("shopping-list", shoppingList)
+            .then(e => console.log("list saved"));
+    }
+
     return (
         <>
             <Stack.Screen
@@ -94,10 +100,25 @@ export default function ShoppingList() {
                     <ScrollView>
                         {shoppingList.map((item, index) => (
                             <View key={index}>
-                                <Checkbox.Item label={item.name}
-                                               status={item.bought ? 'checked' : 'unchecked'}
-                                               onPress={() => handleItemBought(item)}/>
-                                <Divider />
+                                <Card>
+                                    <Card.Title
+                                    title={item.name}
+                                    subtitle={"Added by: " + item.addedBy}
+                                    left={(props) =>
+                                        <IconButton
+                                            icon="delete"
+                                            iconColor={MD3Colors.error50}
+                                            size={20}
+                                            onPress={() => removeItem(item, props)}/>
+                                    }
+                                    right={(props) =>
+                                        <IconButton
+                                            icon={item.bought ? "check" : "crop-square"}
+                                            size={20}
+                                            onPress={() => handleItemBought(item)}/>
+                                        }
+                                    />
+                                </Card>
                             </View>
                         ))}
                     </ScrollView>
