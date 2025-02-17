@@ -1,11 +1,13 @@
 import {StyleSheet, ScrollView, View} from 'react-native';
 import {
-    MD3LightTheme as DefaultTheme, Checkbox, TextInput, Button, Divider, Portal, Dialog, PaperProvider, Text
+    TextInput, Button, Portal, Dialog, Text, Card,
+    IconButton, MD3Colors
 } from 'react-native-paper';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {router, Stack} from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {InMemoryDb} from "@/app/in-memory-key-value-store";
+import {UserContext} from "@/app/user.provider";
 
 interface ShoppingItem {
     id: string;
@@ -17,12 +19,14 @@ interface ShoppingItem {
 }
 
 export namespace ShoppingItem {
-    export function createShoppingItem(name: string, sorter: number): ShoppingItem {
-        return {id: "", bought: false, name: name, sorter: sorter} as ShoppingItem;
+    export function createShoppingItem(name: string, addedBy: any, sorter: number): ShoppingItem {
+        return {id: "", name: name, addedAt: new Date(), addedBy: addedBy, bought: false,  sorter: sorter} as ShoppingItem;
     }
 }
 
 export default function ShoppingList() {
+    const { loggedInUser } = useContext(UserContext);
+
     const [newItemName, setNewItemName] = useState('');
     const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
     const [shoppingItemAlreadyExistsDlgVisible, setShoppingItemAlreadyExistsDlgVisible] = useState(false);
@@ -49,7 +53,7 @@ export default function ShoppingList() {
         if (shoppingList.findIndex(item => item.name === name) == -1) {
             const updatedShoppingList = [
                 ...shoppingList,
-                ShoppingItem.createShoppingItem(newItemName, shoppingList.length++),
+                ShoppingItem.createShoppingItem(newItemName, loggedInUser?.userName, shoppingList.length++),
             ];
             InMemoryDb.storeObject("shopping-list", updatedShoppingList).then(e => console.log("list saved"));
 
