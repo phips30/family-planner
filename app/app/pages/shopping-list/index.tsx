@@ -134,6 +134,7 @@ export default function ShoppingList() {
 
                     <Button icon="plus" mode="contained"
                             style={styles.button}
+                            disabled={newItemName.length == 0}
                             onPress={() => addShoppingItem(newItemName)}>
                         Add Item
                     </Button>
