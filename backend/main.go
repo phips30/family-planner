@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "net/http"
+    "os"
 
     "github.com/gorilla/mux"
 )
@@ -10,6 +11,7 @@ import (
 func main() {
     r := mux.NewRouter()
 
+    fmt.Println("Hello, World!")
     r.HandleFunc("/books/{title}/page/{page}", func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         title := vars["title"]
@@ -18,5 +20,9 @@ func main() {
         fmt.Fprintf(w, "You've requested the book: %s on page %s\n", title, page)
     })
 
-    http.ListenAndServe(":80", r)
+    err := http.ListenAndServe(":8080", r)
+    if err != nil {
+        fmt.Printf("error starting server: %s\n", err)
+        os.Exit(1)
+    }
 }
