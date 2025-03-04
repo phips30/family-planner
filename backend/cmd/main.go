@@ -25,9 +25,15 @@ func main() {
 	}
 	fmt.Printf("Initializing database completed.\n")
 
-	r := mux.NewRouter()
+	// Define Repositories
+	userRepository := user.NewUserRepositoryImpl(dbpool)
 
-	user.RegisterRoutes(r)
+	// Define Services
+	userService := user.NewUserService(userRepository)
+
+	// Define Routing
+	r := mux.NewRouter()
+	user.NewUserRouter(r, *userService)
 
 	fmt.Printf("Starting server on port %s\n", PORT)
 	err = http.ListenAndServe(":"+PORT, r)

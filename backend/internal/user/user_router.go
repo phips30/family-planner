@@ -1,25 +1,46 @@
 package user
 
 import (
-    "fmt"
-    "net/http"
-    "encoding/json"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
-    "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 )
 
-func RegisterRoutes(router *mux.Router) {
-    router.HandleFunc("/user", createUser).Methods("POST")
+type UserRouter struct {
+	router  *mux.Router
+	service UserService
 }
 
-func createUser(w http.ResponseWriter, r *http.Request) {
-    var u User
+func NewUserRouter(router *mux.Router, service UserService) *UserRouter {
+	userRouter := &UserRouter{
+		router:  router,
+		service: service,
+	}
 
-    if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-        fmt.Println("error")
-        return
-    }
-    fmt.Printf("Name: %s, DeviceId: %s\n", u.Name, u.DeviceId)
-    fmt.Fprintf(w, "Name: %s, DeviceId: %s\n", u.Name, u.DeviceId)
+	router.HandleFunc("/user", userRouter.createUser).Methods("POST")
+
+	return userRouter
+}
+
+func (u *UserRouter) RegisterRoutes(router *mux.Router) {
+	router.HandleFunc("/user", u.createUser).Methods("POST")
+}
+
+func (u *UserRouter) createUser(w http.ResponseWriter, r *http.Request) {
+	var user User
+
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		fmt.Println("error")
+		return
+	}
+
+	fmt.Printf("Name: %s, DeviceId: %s\n", user.Name, user.DeviceId)
+	var us, err = u.service.CreateUser(user.Name, user.DeviceId)
+
+	fmt.Printf(err.Error())
+	fmt.Printf("Name: %s, DeviceId: %s\n", us.Name, us.DeviceId)
+	fmt.Fprintf(w, "Name: %s, DeviceId: %s\n", us.Name, us.DeviceId)
 
 }
