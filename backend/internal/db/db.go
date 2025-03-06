@@ -12,6 +12,7 @@ import (
 const DB_CONNECTION_STRING = "postgres://postgres:postgres@localhost:5432/family_planner"
 
 func Connect() *pgxpool.Pool {
+	// Todo: make sure this is only called once and always returns the same dbpool after first init
 	dbpool, err := pgxpool.New(context.Background(), DB_CONNECTION_STRING)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
@@ -23,19 +24,19 @@ func Connect() *pgxpool.Pool {
 func InitDb(pool *pgxpool.Pool) error {
 	sqlfiles, err := filepath.Glob("../db/sql/*.sql")
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+		return fmt.Errorf("err: %v", err)
 	}
 
 	for _, sqlfile := range sqlfiles {
 		data, err := os.ReadFile(sqlfile)
 		if err != nil {
-			fmt.Printf("err: %v\n", err)
+			return fmt.Errorf("err: %v", err)
 		}
 
 		sql := string(data)
 		_, err = pool.Exec(context.Background(), sql)
 		if err != nil {
-			fmt.Printf("err: %v\n", err)
+			return fmt.Errorf("err: %v", err)
 		} else {
 			fmt.Printf("Executed SQL script: %s\n", sqlfile)
 		}

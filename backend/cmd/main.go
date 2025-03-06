@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,24 +10,30 @@ import (
 	"family-planner/backend/internal/user"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // To be defined via ENV vars
 const PORT = "8080"
 
+var (
+	dbpool *pgxpool.Pool
+	ctx    context.Context = context.Background()
+)
+
 func main() {
-	dbpool := db.Connect()
-	defer dbpool.Close()
+	dbpool = db.Connect()
 
 	fmt.Printf("Initializing database ...\n")
 	err := db.InitDb(dbpool)
 	if err != nil {
 		fmt.Printf("Error initializing database: %s\n", err)
+	} else {
+		fmt.Printf("Initializing database completed.\n")
 	}
-	fmt.Printf("Initializing database completed.\n")
 
 	// Define Repositories
-	userRepository := user.NewUserRepositoryImpl(dbpool)
+	userRepository := user.NewUserRepositoryImpl(ctx, dbpool)
 
 	// Define Services
 	userService := user.NewUserService(userRepository)

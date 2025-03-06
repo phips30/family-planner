@@ -9,54 +9,41 @@ import (
 )
 
 type UserRepositoryImpl struct {
+	ctx    context.Context
 	dbpool *pgxpool.Pool
 }
 
-func NewUserRepositoryImpl(dbpool *pgxpool.Pool) *UserRepositoryImpl {
-	return &UserRepositoryImpl{dbpool: dbpool}
+func NewUserRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *UserRepositoryImpl {
+	return &UserRepositoryImpl{ctx: ctx, dbpool: dbpool}
 }
 
 func (u *UserRepositoryImpl) Create(user *User) (*User, error) {
-	return nil, nil
+	query := `INSERT INTO public.user (id, name, device_id) VALUES (@id, @name, @deviceId)`
+	args := pgx.NamedArgs{
+		"id":       &user.Id,
+		"name":     &user.Name,
+		"deviceId": &user.DeviceId,
+	}
+	_, err := u.dbpool.Exec(u.ctx, query, args)
+	if err != nil {
+		return nil, fmt.Errorf("unable to insert row: %w", err)
+	}
+
+	return user, nil
 }
 
 func (u *UserRepositoryImpl) FindByNameAndDeviceId(name string, deviceId string) (*User, error) {
-	fmt.Printf("Getting user data")
-
 	var userInDb User
-	query := `SELECT * FROM user LIMIT 10`
+	query := `SELECT * FROM public.user where name = @name and device_id = @deviceId`
+	args := pgx.NamedArgs{
+		"name":     name,
+		"deviceId": deviceId,
+	}
 
-	fmt.Print("Lets see if an error occurs")
-	rows, err := u.dbpool.Query(context.Background(), query)
+	err := u.dbpool.QueryRow(u.ctx, query, args).Scan(&userInDb.Id, &userInDb.Name, &userInDb.DeviceId)
 	if err != nil {
 		return nil, fmt.Errorf("unable to query users: %w", err)
 	}
-	defer rows.Close()
-
-	fmt.Print("There was no error unitl here")
-	users := []User{}
-	for rows.Next() {
-		fmt.Print("Lets see if we can append")
-		user := User{}
-		err := rows.Scan(&user.Id, &user.Name, &user.DeviceId)
-		fmt.Print("Lets see if we can append here")
-
-		if err != nil {
-			return nil, fmt.Errorf("unable to scan row: %w", err)
-		}
-		fmt.Print("Lets see if we can append here 2")
-		users = append(users, user)
-	}
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			fmt.Println("No rows found")
-		} else {
-			fmt.Println("An error occured")
-			fmt.Println(err)
-		}
-	}
-
-	fmt.Printf("%s", userInDb.Name)
 
 	return &userInDb, nil
 }

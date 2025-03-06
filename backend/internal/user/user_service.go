@@ -1,8 +1,11 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 )
+
+// This is the user domain service
 
 type UserService struct {
 	repository UserRepository
@@ -13,9 +16,25 @@ func NewUserService(repository UserRepository) *UserService {
 }
 
 func (s *UserService) CreateUser(name string, deviceId string) (*User, error) {
-	if user, err := s.repository.FindByNameAndDeviceId(name, deviceId); err != nil && user != nil {
-		fmt.Printf("An error occured")
+	validation_error := s.validate(name, deviceId)
+	if validation_error != nil {
+		return nil, fmt.Errorf("%s", validation_error.Error())
 	}
 
-	return nil, nil
+	user, err := NewUser(name, deviceId)
+	if err != nil {
+		return nil, err
+	}
+	return s.repository.Create(user)
+}
+
+func (s *UserService) validate(name string, deviceId string) error {
+	user, err := s.repository.FindByNameAndDeviceId(name, deviceId)
+	if err != nil {
+		fmt.Printf("Error querying user")
+	}
+	if user != nil {
+		return errors.New("User already exists in db")
+	}
+	return nil
 }

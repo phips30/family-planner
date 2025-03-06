@@ -35,9 +35,6 @@ func (u *User) validate() error {
 	if u.DeviceId == "" {
 		return errors.New("deviceId cannot be empty")
 	}
-	if user, err := UserRepository.FindByNameAndDeviceId(nil, u.Name, u.DeviceId); err != nil && user != nil {
-		return errors.New("user already exists")
-	}
 
 	return nil
 }

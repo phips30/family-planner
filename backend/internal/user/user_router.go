@@ -24,12 +24,8 @@ func NewUserRouter(router *mux.Router, service UserService) *UserRouter {
 	return userRouter
 }
 
-func (u *UserRouter) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/user", u.createUser).Methods("POST")
-}
-
 func (u *UserRouter) createUser(w http.ResponseWriter, r *http.Request) {
-	var user User
+	var user *User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		fmt.Println("error")
@@ -37,10 +33,14 @@ func (u *UserRouter) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("Name: %s, DeviceId: %s\n", user.Name, user.DeviceId)
-	var us, err = u.service.CreateUser(user.Name, user.DeviceId)
+	newUser, err := u.service.CreateUser(user.Name, user.DeviceId)
 
-	fmt.Printf(err.Error())
-	fmt.Printf("Name: %s, DeviceId: %s\n", us.Name, us.DeviceId)
-	fmt.Fprintf(w, "Name: %s, DeviceId: %s\n", us.Name, us.DeviceId)
+	if err != nil || newUser == nil {
+		fmt.Printf("%s", err.Error())
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+	} else {
+		fmt.Printf("Name: %s, DeviceId: %s\n", newUser.Name, newUser.DeviceId)
+		fmt.Fprintf(w, "Name: %s, DeviceId: %s\n", newUser.Name, newUser.DeviceId)
+	}
 
 }
