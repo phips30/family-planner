@@ -10,15 +10,15 @@ import (
 type User struct {
 	Id        uuid.UUID
 	Name      string
-	DeviceId  string
+	Email     string
 	CreatedAt time.Time
 }
 
-func NewUser(name string, deviceId string) (*User, error) {
+func NewUser(name string, email string) (*User, error) {
 	user := User{
 		Id:        uuid.New(),
 		Name:      name,
-		DeviceId:  deviceId,
+		Email:     email,
 		CreatedAt: time.Now(),
 	}
 	if err := user.validate(); err != nil {
@@ -32,8 +32,8 @@ func (u *User) validate() error {
 	if u.Name == "" {
 		return errors.New("name cannot be empty")
 	}
-	if u.DeviceId == "" {
-		return errors.New("deviceId cannot be empty")
+	if u.Email == "" {
+		return errors.New("email cannot be empty")
 	}
 
 	return nil

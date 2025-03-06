@@ -15,26 +15,30 @@ func NewUserService(repository UserRepository) *UserService {
 	return &UserService{repository: repository}
 }
 
-func (s *UserService) CreateUser(name string, deviceId string) (*User, error) {
-	validation_error := s.validate(name, deviceId)
+func (s *UserService) CreateUser(name string, email string) (*User, error) {
+	validation_error := s.validate(email)
 	if validation_error != nil {
 		return nil, fmt.Errorf("%s", validation_error.Error())
 	}
 
-	user, err := NewUser(name, deviceId)
+	user, err := NewUser(name, email)
 	if err != nil {
 		return nil, err
 	}
 	return s.repository.Create(user)
 }
 
-func (s *UserService) validate(name string, deviceId string) error {
-	user, err := s.repository.FindByNameAndDeviceId(name, deviceId)
+func (s *UserService) FindByEmail(email string) (*User, error) {
+	return s.repository.FindByEmail(email)
+}
+
+func (s *UserService) validate(email string) error {
+	user, err := s.FindByEmail(email)
 	if err != nil {
 		fmt.Printf("Error querying user")
 	}
 	if user != nil {
-		return errors.New("User already exists in db")
+		return errors.New("User already exists")
 	}
 	return nil
 }
