@@ -10,6 +10,7 @@ import (
 	"family-planner/backend/internal/user"
 
 	"github.com/gorilla/mux"
+    "github.com/gorilla/handlers"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -40,10 +41,14 @@ func main() {
 
 	// Define Routing
 	r := mux.NewRouter()
+	headers := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+    methods := handlers.AllowedMethods([]string{"GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"})
+    origins := handlers.AllowedOrigins([]string{"*"})
+
 	user.NewUserRouter(r, *userService)
 
 	fmt.Printf("Starting server on port %s\n", PORT)
-	err = http.ListenAndServe(":"+PORT, r)
+	err = http.ListenAndServe(":"+PORT, handlers.CORS(headers, methods, origins)(r))
 	if err != nil {
 		fmt.Printf("Error starting server: %s\n", err)
 		os.Exit(1)
