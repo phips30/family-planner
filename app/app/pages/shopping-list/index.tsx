@@ -7,20 +7,19 @@ import React, {useContext, useEffect, useState} from 'react';
 import {router, Stack} from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {InMemoryDb} from "@/app/in-memory-key-value-store";
-import {UserContext} from "@/app/user.provider";
+import {User, UserContext} from "@/app/user.provider";
 
 interface ShoppingItem {
-    id: string;
     name: string;
-    addedBy: string;
+    addedBy: User;
     addedAt: Date;
     bought: boolean;
     sorter: number;
 }
 
 export namespace ShoppingItem {
-    export function createShoppingItem(name: string, addedBy: any, sorter: number): ShoppingItem {
-        return {id: "", name: name, addedAt: new Date(), addedBy: addedBy, bought: false,  sorter: sorter} as ShoppingItem;
+    export function createShoppingItem(name: string, addedBy: User, sorter: number): ShoppingItem {
+        return {name: name, addedBy: addedBy, addedAt: new Date(), bought: false,  sorter: sorter} as ShoppingItem;
     }
 }
 
@@ -53,12 +52,14 @@ export default function ShoppingList() {
         if (shoppingList.findIndex(item => item.name === name) == -1) {
             const updatedShoppingList = [
                 ...shoppingList,
-                ShoppingItem.createShoppingItem(newItemName, loggedInUser?.userName, shoppingList.length++),
+                ShoppingItem.createShoppingItem(newItemName, loggedInUser, shoppingList.length++),
             ];
-            InMemoryDb.storeObject("shopping-list", updatedShoppingList).then(e => console.log("list saved"));
-
-            setShoppingList(updatedShoppingList);
-            setNewItemName('');
+            InMemoryDb.storeObject("shopping-list", updatedShoppingList)
+                .then(e => {
+                    console.log("list saved", updatedShoppingList)
+                    setShoppingList(updatedShoppingList);
+                    setNewItemName('');
+                });
         } else {
             setShoppingItemAlreadyExistsDlgVisible(true);
         }
@@ -72,7 +73,11 @@ export default function ShoppingList() {
 
         if (theItem) {
             theItem.bought = !theItem.bought;
-            setShoppingList(shoppingListCopy);
+            InMemoryDb.storeObject("shopping-list", shoppingListCopy)
+                .then(e => {
+                    console.log("list saved", shoppingListCopy)
+                    setShoppingList(shoppingListCopy);
+                });
         }
     }
 
@@ -103,7 +108,7 @@ export default function ShoppingList() {
                                 <Card>
                                     <Card.Title
                                     title={item.name}
-                                    subtitle={"Added by: " + item.addedBy}
+                                    subtitle={"Added by: " + item.addedBy.name}
                                     left={(props) =>
                                         <IconButton
                                             icon="delete"

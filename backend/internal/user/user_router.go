@@ -13,6 +13,11 @@ type UserRouter struct {
 	service UserService
 }
 
+type UserResponse struct {
+    Name string      `json:"name"`
+    Email string     `json:"email"`
+}
+
 func NewUserRouter(router *mux.Router, service UserService) *UserRouter {
 	userRouter := &UserRouter{
 		router:  router,
@@ -36,7 +41,7 @@ func (u *UserRouter) findUser(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("User not found %s", user)
 		http.Error(w, "User not found", http.StatusBadRequest)
 	} else {
-		json.NewEncoder(w).Encode(user)
+		json.NewEncoder(w).Encode(UserResponse{Name: user.Name, Email: user.Email})
 	}
 }
 

@@ -7,18 +7,25 @@ import { Link } from 'expo-router';
 import {User, UserContext} from "@/app/user.provider";
 
 function CreateNewUserForm({createUser}) {
-    const [userName, setUserName] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
 
     const handleCreateNewUserClick = () => {
-        createUser(userName);
+        createUser(name, email);
     };
 
     return (
         <View style={styles.containerCenter}>
             <TextInput
                 label="Name"
-                value={userName}
-                onChangeText={text => setUserName(text)}
+                value={name}
+                onChangeText={text => setName(text)}
+                style={styles.input}
+            />
+            <TextInput
+                label="Email"
+                value={email}
+                onChangeText={text => setEmail(text)}
                 style={styles.input}
             />
             <Button mode="contained" onPress={handleCreateNewUserClick} style={styles.button}>Submit</Button>
@@ -34,10 +41,10 @@ export default function HomeScreen() {
         return loggedInUser != null;
     }
 
-    function storeUser(userName: any) {
+    function storeUser(name: any, email: string) {
         let newUser = {
-            userId: Math.floor((Math.random() * 100) + 1).toString(),
-            userName: userName
+            name: name,
+            email: email
         } as User;
 
         InMemoryDb.storeData("user", JSON.stringify(newUser))
@@ -53,7 +60,7 @@ export default function HomeScreen() {
         <View style={styles.containerCenter}>
             {hasUserData() ?
                 <>
-                    <Text variant="displayMedium">Hello {loggedInUser?.userName} {loggedInUser?.userId}</Text>
+                    <Text variant="displayMedium">Hello {loggedInUser.name} {loggedInUser.email}</Text>
 
                     <Link href="/pages/shopping-list" asChild>
                         <Button mode="outlined" style={styles.button}>
@@ -66,7 +73,7 @@ export default function HomeScreen() {
                     <Text variant="displayMedium">Hello Stranger!</Text>
                     <Text variant="displaySmall">Looks like I don´t know you yet.</Text>
                     <Text variant="displaySmall">Please provide your name so we can get started</Text>
-                    <CreateNewUserForm createUser={(username: string) => storeUser(username)}/>
+                    <CreateNewUserForm createUser={(name: string, email: string) => storeUser(name, email)}/>
                 </>
             }
         </View>
