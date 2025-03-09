@@ -13,9 +13,9 @@ type UserRouter struct {
 	service UserService
 }
 
-type UserResponse struct {
-    Name string      `json:"name"`
-    Email string     `json:"email"`
+type UserDto struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 func NewUserRouter(router *mux.Router, service UserService) *UserRouter {
@@ -41,20 +41,20 @@ func (u *UserRouter) findUser(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("User not found %s", user)
 		http.Error(w, "User not found", http.StatusBadRequest)
 	} else {
-		json.NewEncoder(w).Encode(UserResponse{Name: user.Name, Email: user.Email})
+		json.NewEncoder(w).Encode(UserDto{Name: user.Name, Email: user.Email})
 	}
 }
 
 func (u *UserRouter) createUser(w http.ResponseWriter, r *http.Request) {
-	var user *User
+	var userRequest *UserDto
 
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&userRequest); err != nil {
 		fmt.Println("error")
 		return
 	}
 
-	fmt.Printf("Trying to create user - Name: %s, Email: %s\n", user.Name, user.Email)
-	newUser, err := u.service.CreateUser(user.Name, user.Email)
+	fmt.Printf("Trying to create user - Name: %s, Email: %s\n", userRequest.Name, userRequest.Email)
+	newUser, err := u.service.CreateUser(userRequest.Name, userRequest.Email)
 
 	if err != nil || newUser == nil {
 		fmt.Printf("%s", err.Error())
