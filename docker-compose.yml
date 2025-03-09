@@ -18,6 +18,17 @@ services:
       timeout: 5s
       retries: 5
 
+  mongo:
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=mongo
+    volumes:
+      - family-planner-mongo-data:/data/db
+
   backend:
     image: backend:latest
     build:
@@ -28,3 +39,4 @@ services:
 
 volumes:
   family-planner-db-data:
+  family-planner-mongo-data:
