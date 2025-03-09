@@ -38,8 +38,8 @@ export const UserProvider = ({ children }) => {
                 }
             })
             .then((response) => {
-                // Change this - e.g. just define that app is in offline mode etc.
-                setLoggedInUser(Object.assign({}, response?.data));
+                // Todo: Change this - e.g. just define that app is in offline mode etc.
+                //setLoggedInUser(Object.assign({}, response?.data));
             })
             .catch((error) => {
                 console.error("Error loading user from server", error);

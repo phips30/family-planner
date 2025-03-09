@@ -8,6 +8,8 @@ import {router, Stack} from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {InMemoryDb} from "@/app/in-memory-key-value-store";
 import {User, UserContext} from "@/app/user.provider";
+import axios from "axios";
+import {API_URL} from "@/app/constants";
 
 interface ShoppingItem {
     name: string;
@@ -59,7 +61,10 @@ export default function ShoppingList() {
                     console.log("list saved", updatedShoppingList)
                     setShoppingList(updatedShoppingList);
                     setNewItemName('');
-                });
+                    return axios.post<ShoppingItem[]>(`${API_URL}/shopping-list`, updatedShoppingList);
+                })
+                .then(httpResponse => console.log(httpResponse))
+                .catch(e => {console.log(e)});
         } else {
             setShoppingItemAlreadyExistsDlgVisible(true);
         }

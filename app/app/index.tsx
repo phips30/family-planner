@@ -5,6 +5,8 @@ import {View, StyleSheet} from "react-native";
 import { InMemoryDb } from '@/app/in-memory-key-value-store';
 import { Link } from 'expo-router';
 import {User, UserContext} from "@/app/user.provider";
+import axios from "axios";
+import {API_URL} from "@/app/constants";
 
 function CreateNewUserForm({createUser}) {
     const [name, setName] = useState('');
@@ -38,7 +40,7 @@ export default function HomeScreen() {
     const { loggedInUser, setLoggedInUser } = useContext(UserContext);
 
     const hasUserData = (): boolean => {
-        return loggedInUser != null;
+        return loggedInUser.name != null;
     }
 
     function storeUser(name: any, email: string) {
@@ -47,13 +49,18 @@ export default function HomeScreen() {
             email: email
         } as User;
 
-        InMemoryDb.storeData("user", JSON.stringify(newUser))
-            .then(e => {
-                setLoggedInUser({
-                    ...newUser
-                });
-                console.log("stored", e);
+        const saveInMemoryPromise = InMemoryDb.storeData("user", JSON.stringify(newUser));
+        const saveOnServerPromise = axios.post<User>(`${API_URL}/user`, newUser);
+
+        Promise.all([saveInMemoryPromise, saveOnServerPromise]).then((response) => {
+            console.log("user stored");
+            setLoggedInUser({
+                ...newUser
             });
+        }).catch((error) => {
+            // Todo: Show toast
+            console.error("For initial login, a connection to the server is required")
+        });
     }
 
     return (
