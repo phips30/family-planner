@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
 	"family-planner/backend/internal/db"
+	"family-planner/backend/internal/shoppinglist"
 	"family-planner/backend/internal/user"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-    "github.com/gorilla/handlers"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -23,14 +25,22 @@ var (
 )
 
 func main() {
-	dbpool = db.Connect()
-
-	fmt.Printf("Initializing database ...\n")
+	// Init postgres
+	dbpool = db.ConnectPostgres()
+	log.Println("Initializing database ...")
 	err := db.InitDb(dbpool)
 	if err != nil {
-		fmt.Printf("Error initializing database: %s\n", err)
+		log.Printf("Error initializing database: %s\n", err)
 	} else {
-		fmt.Printf("Initializing database completed.\n")
+		log.Println("Initializing database completed.")
+	}
+
+	// Init mongodb
+	mongoDbClient, err := db.ConnectMongo()
+	if err != nil {
+		log.Panic("Error connecting to mongo\n", err.Error())
+	} else {
+		log.Println("Connected to MongoDB!")
 	}
 
 	// Define Repositories
@@ -42,10 +52,11 @@ func main() {
 	// Define Routing
 	r := mux.NewRouter()
 	headers := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
-    methods := handlers.AllowedMethods([]string{"GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"})
-    origins := handlers.AllowedOrigins([]string{"*"})
+	methods := handlers.AllowedMethods([]string{"GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"})
+	origins := handlers.AllowedOrigins([]string{"*"})
 
 	user.NewUserRouter(r, *userService)
+	shoppinglist.NewShoppinglistRouter(r, mongoDbClient)
 
 	fmt.Printf("Starting server on port %s\n", PORT)
 	err = http.ListenAndServe(":"+PORT, handlers.CORS(headers, methods, origins)(r))

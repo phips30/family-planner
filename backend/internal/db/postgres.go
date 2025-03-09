@@ -11,7 +11,7 @@ import (
 
 const DB_CONNECTION_STRING = "postgres://postgres:postgres@localhost:5432/family_planner"
 
-func Connect() *pgxpool.Pool {
+func ConnectPostgres() *pgxpool.Pool {
 	// Todo: make sure this is only called once and always returns the same dbpool after first init
 	dbpool, err := pgxpool.New(context.Background(), DB_CONNECTION_STRING)
 	if err != nil {
