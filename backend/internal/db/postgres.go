@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -11,14 +12,13 @@ import (
 
 const DB_CONNECTION_STRING = "postgres://postgres:postgres@localhost:5432/family_planner"
 
-func ConnectPostgres() *pgxpool.Pool {
+func ConnectPostgres() (*pgxpool.Pool, error) {
 	// Todo: make sure this is only called once and always returns the same dbpool after first init
 	dbpool, err := pgxpool.New(context.Background(), DB_CONNECTION_STRING)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("unable to create connection pool: %v", err)
 	}
-	return dbpool
+	return dbpool, nil
 }
 
 func InitDb(pool *pgxpool.Pool) error {
@@ -38,7 +38,7 @@ func InitDb(pool *pgxpool.Pool) error {
 		if err != nil {
 			return fmt.Errorf("err: %v", err)
 		} else {
-			fmt.Printf("Executed SQL script: %s\n", sqlfile)
+			log.Printf("Executed SQL script: %s\n", sqlfile)
 		}
 	}
 

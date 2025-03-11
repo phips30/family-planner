@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -26,10 +25,15 @@ var (
 
 func main() {
 	// Init postgres
-	dbpool = db.ConnectPostgres()
-	log.Println("Initializing database ...")
-	err := db.InitDb(dbpool)
+	dbpool, err := db.ConnectPostgres()
 	if err != nil {
+		log.Fatal("Error connecting to postgres", err.Error())
+	} else {
+		log.Println("Connected to Postgres!")
+	}
+
+	log.Println("Initializing database ...")
+	if err = db.InitDb(dbpool); err != nil {
 		log.Printf("Error initializing database: %s\n", err)
 	} else {
 		log.Println("Initializing database completed.")
@@ -38,16 +42,18 @@ func main() {
 	// Init mongodb
 	mongoDbClient, err := db.ConnectMongo()
 	if err != nil {
-		log.Panic("Error connecting to mongo\n", err.Error())
+		log.Fatal("Error connecting to mongo", err.Error())
 	} else {
 		log.Println("Connected to MongoDB!")
 	}
 
 	// Define Repositories
 	userRepository := user.NewUserRepositoryImpl(ctx, dbpool)
+	shoppinglistRepository := shoppinglist.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
 
 	// Define Services
 	userService := user.NewUserService(userRepository)
+	shoppinglistService := shoppinglist.NewShoppinglistService(shoppinglistRepository)
 
 	// Define Routing
 	r := mux.NewRouter()
@@ -56,12 +62,12 @@ func main() {
 	origins := handlers.AllowedOrigins([]string{"*"})
 
 	user.NewUserRouter(r, *userService)
-	shoppinglist.NewShoppinglistRouter(r, mongoDbClient)
+	shoppinglist.NewShoppinglistRouter(r, mongoDbClient, shoppinglistService)
 
-	fmt.Printf("Starting server on port %s\n", PORT)
+	log.Printf("Starting server on port %s", PORT)
 	err = http.ListenAndServe(":"+PORT, handlers.CORS(headers, methods, origins)(r))
 	if err != nil {
-		fmt.Printf("Error starting server: %s\n", err)
+		log.Printf("Error starting server: %s", err)
 		os.Exit(1)
 	}
 }

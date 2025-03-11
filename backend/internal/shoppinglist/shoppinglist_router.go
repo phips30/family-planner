@@ -2,11 +2,11 @@ package shoppinglist
 
 import (
 	"encoding/json"
+	"family-planner/backend/internal/user"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
-
-	"family-planner/backend/internal/user"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,20 +15,22 @@ import (
 type ShoppinglistRouter struct {
 	router        *mux.Router
 	mongoDbClient *mongo.Database
+	service       *ShoppinglistService
 }
 
 type ShoppinglistItemDto struct {
-	Name    string       `json:"name"`
+	Name string `json:"name"`
+	// TODO: This can be just the email
 	AddedBy user.UserDto `json:"addedBy"`
 	AddedAt time.Time    `json:"addedAt"`
 	Bought  bool         `json:"bought"`
-	Sorter  int          `json:"sorter"`
 }
 
-func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database) *ShoppinglistRouter {
+func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, shoppinglistService *ShoppinglistService) *ShoppinglistRouter {
 	shoppinglistRouter := &ShoppinglistRouter{
 		router:        router,
 		mongoDbClient: mongoDbClient,
+		service:       shoppinglistService,
 	}
 
 	router.HandleFunc("/shopping-list", shoppinglistRouter.findList).Methods("GET")
@@ -48,9 +50,18 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 	var shoppinglistRequest []ShoppinglistItemDto
 
 	if err := json.NewDecoder(r.Body).Decode(&shoppinglistRequest); err != nil {
-		fmt.Println("error parsing request")
+		log.Println("error parsing request")
 		http.Error(w, "error parsing request", http.StatusBadRequest)
 	}
 
-	fmt.Println(shoppinglistRequest)
+	log.Println("Wer are ")
+	for _, item := range shoppinglistRequest {
+		log.Println(item.AddedBy)
+	}
+
+	_, err := s.service.SaveShoppingList(shoppinglistRequest)
+	if err != nil {
+		log.Println("Error saving shopping list:", err.Error())
+	}
+	json.NewEncoder(w).Encode(shoppinglistRequest)
 }

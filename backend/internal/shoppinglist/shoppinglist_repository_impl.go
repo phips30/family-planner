@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,32 +13,38 @@ import (
 
 type ShoppinglistRepositoryImpl struct {
 	ctx               context.Context
-	dbpool            *pgxpool.Pool
 	mongoDbCollection *mongo.Collection
 }
 
 const MONGO_DB_COLLECTION = "family-planner"
 
-func NewShoppinglistRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool, mongoDbClient *mongo.Database) *ShoppinglistRepositoryImpl {
-	return &ShoppinglistRepositoryImpl{ctx: ctx, dbpool: dbpool, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
+func NewShoppinglistRepositoryImpl(ctx context.Context, mongoDbClient *mongo.Database) *ShoppinglistRepositoryImpl {
+	return &ShoppinglistRepositoryImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
-func (s *ShoppinglistRepositoryImpl) Create(shoppinglistItems []*ShoppinglistItem) ([]*ShoppinglistItem, error) {
-	_, err := s.mongoDbCollection.InsertOne(s.ctx, shoppinglistItems)
+func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []ShoppinglistItem) ([]ShoppinglistItem, error) {
+	var interfaces []interface{}
+	for _, item := range shoppinglistItems {
+		interfaces = append(interfaces, item)
+	}
+
+	result, err := s.mongoDbCollection.InsertMany(s.ctx, interfaces)
 
 	if err != nil {
-		log.Panic(err)
 		return nil, err
 	}
-	return shoppinglistItems, nil
+
+	if len(result.InsertedIDs) == len(shoppinglistItems) {
+		return shoppinglistItems, nil
+	}
+
+	return nil, fmt.Errorf("could not insert all documents into mongodb")
 }
 
-func (s *ShoppinglistRepositoryImpl) FindAllInGroupForEmail(email string) ([]ShoppinglistItem, error) {
-	// Todo: Select all emails in group
-
+func (s *ShoppinglistRepositoryImpl) FindAllInGroup(group uuid.UUID) ([]ShoppinglistItem, error) {
 	var results []ShoppinglistItem
 	findOptions := options.Find()
-	filter := bson.M{} // Add filter for email addresses
+	filter := bson.M{"group": group}
 	cursor, err := s.mongoDbCollection.Find(s.ctx, filter, findOptions)
 
 	if err != nil {
