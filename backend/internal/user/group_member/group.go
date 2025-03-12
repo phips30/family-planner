@@ -4,7 +4,7 @@ import (
 	"family-planner/backend/internal/user"
 	"time"
 
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/internal/uuid"
 )
 
 type Group struct {

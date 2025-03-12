@@ -30,7 +30,7 @@ func (g *GroupService) CreateGroup(groupName string, requestedByEmail string) (*
 		return nil, err
 	}
 
-	group := NewGroup(groupName, requester.Id)
+	group := NewGroup(groupName, *requester)
 
 	return g.repository.Save(&group)
 }

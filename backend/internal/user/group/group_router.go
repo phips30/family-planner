@@ -11,7 +11,7 @@ import (
 
 type GroupRouter struct {
 	router  *mux.Router
-	service *GroupService
+	service GroupService
 }
 
 type GroupDto struct {
@@ -40,7 +40,7 @@ func (g *GroupRouter) createGroup(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Trying to create new group - Name: %s, Requested by: %s\n", newGroupRequest.Email, newGroupRequest.Email)
 
-	newGroup, err := g.service.CreateNewGroup(newGroupRequest.Name, newGroupRequest.Email)
+	newGroup, err := g.service.CreateGroup(newGroupRequest.Name, newGroupRequest.Email)
 	if err != nil || newGroup == nil {
 		fmt.Printf("%s", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
