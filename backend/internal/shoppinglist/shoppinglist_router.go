@@ -54,12 +54,18 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "error parsing request", http.StatusBadRequest)
 	}
 
-	log.Println("Wer are ")
-	for _, item := range shoppinglistRequest {
-		log.Println(item.AddedBy)
+	var shoppinglist []ShoppinglistItem
+	for _, shoppinglistItemDto := range shoppinglistRequest {
+		shoppinglistItem := NewShoppinglistItem(
+			shoppinglistItemDto.Name,
+			shoppinglistItemDto.AddedAt,
+			shoppinglistItemDto.AddedBy.Email,
+			shoppinglistItemDto.Bought)
+
+		shoppinglist = append(shoppinglist, *shoppinglistItem)
 	}
 
-	_, err := s.service.SaveShoppingList(shoppinglistRequest)
+	_, err := s.service.SaveShoppingList(shoppinglist)
 	if err != nil {
 		log.Println("Error saving shopping list:", err.Error())
 	}

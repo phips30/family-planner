@@ -36,7 +36,7 @@ func InitDb(pool *pgxpool.Pool) error {
 		sql := string(data)
 		_, err = pool.Exec(context.Background(), sql)
 		if err != nil {
-			return fmt.Errorf("err: %v", err)
+			log.Printf("err: %v", err)
 		} else {
 			log.Printf("Executed SQL script: %s\n", sqlfile)
 		}
