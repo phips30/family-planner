@@ -7,10 +7,10 @@ import (
 )
 
 type ShoppinglistService struct {
-	repository ShoppinglistRepositoryImpl
+	repository ShoppinglistRepository
 }
 
-func NewShoppinglistService(repository ShoppinglistRepositoryImpl) *ShoppinglistService {
+func NewShoppinglistService(repository ShoppinglistRepository) *ShoppinglistService {
 	return &ShoppinglistService{repository: repository}
 }
 
