@@ -1,7 +1,6 @@
-package group
+package domain
 
 import (
-	"family-planner/backend/internal/user"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,11 +9,11 @@ import (
 type Group struct {
 	Id        uuid.UUID
 	Name      string
-	CreatedBy user.User
+	CreatedBy User
 	CreatedAt time.Time
 }
 
-func NewGroup(name string, createdBy user.User) Group {
+func NewGroup(name string, createdBy User) Group {
 	return Group{
 		Id:        uuid.New(),
 		Name:      name,

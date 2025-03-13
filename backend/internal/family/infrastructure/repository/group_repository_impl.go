@@ -1,7 +1,8 @@
-package group
+package repository
 
 import (
 	"context"
+	"family-planner/backend/internal/family/domain"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -13,11 +14,11 @@ type GroupRepositoryImpl struct {
 	dbpool *pgxpool.Pool
 }
 
-func NewGrouprRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *GroupRepositoryImpl {
+func NewGroupRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *GroupRepositoryImpl {
 	return &GroupRepositoryImpl{ctx: ctx, dbpool: dbpool}
 }
 
-func (g *GroupRepositoryImpl) Save(group *Group) (*Group, error) {
+func (g *GroupRepositoryImpl) Save(group *domain.Group) (*domain.Group, error) {
 	query := `INSERT INTO public.group (id, name, created_by, created_at) VALUES (@id, @name, @createdBy, @createdAt)`
 	args := pgx.NamedArgs{
 		"id":        group.Id,
@@ -33,6 +34,6 @@ func (g *GroupRepositoryImpl) Save(group *Group) (*Group, error) {
 	return group, nil
 }
 
-func (g *GroupRepositoryImpl) FindGroupForUser(requestedByEmail string) *Group {
+func (g *GroupRepositoryImpl) FindGroupForUser(requestedByEmail string) *domain.Group {
 	panic("unimplemented")
 }

@@ -1,9 +1,4 @@
-package groupmember
-
-import (
-	"family-planner/backend/internal/user"
-	"family-planner/backend/internal/user/group"
-)
+package domain
 
 type GroupMemberService struct {
 	repository GroupMemberRepository
@@ -15,7 +10,7 @@ func NewGroupMemberService(repository GroupMemberRepository) *GroupMemberService
 	}
 }
 
-func (g *GroupMemberService) AddMember(group group.Group, user user.User) (*GroupMember, error) {
+func (g *GroupMemberService) AddMember(group Group, user User) (*GroupMember, error) {
 	newGroupMember := NewGroupMember(group, user)
 	return g.repository.Save(&newGroupMember)
 }

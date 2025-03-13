@@ -7,8 +7,10 @@ import (
 	"os"
 
 	"family-planner/backend/internal/db"
+	"family-planner/backend/internal/family/domain"
+	"family-planner/backend/internal/family/infrastructure/api"
+	"family-planner/backend/internal/family/infrastructure/repository"
 	"family-planner/backend/internal/shoppinglist"
-	"family-planner/backend/internal/user"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -48,11 +50,15 @@ func main() {
 	}
 
 	// Define Repositories
-	userRepository := user.NewUserRepositoryImpl(ctx, dbpool)
+	userRepository := repository.NewUserRepositoryImpl(ctx, dbpool)
+	groupMemberRepository := repository.NewGroupMemberRepositoryImpl(ctx, dbpool)
+	groupRepository := repository.NewGroupRepositoryImpl(ctx, dbpool)
 	shoppinglistRepository := shoppinglist.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
 
 	// Define Services
-	userService := user.NewUserService(userRepository)
+	userService := domain.NewUserService(userRepository)
+	groupMemberService := domain.NewGroupMemberService(groupMemberRepository)
+	groupService := domain.NewGroupService(groupRepository, *userService, *groupMemberService)
 	shoppinglistService := shoppinglist.NewShoppinglistService(shoppinglistRepository)
 
 	// Define Routing
@@ -61,7 +67,8 @@ func main() {
 	methods := handlers.AllowedMethods([]string{"GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"})
 	origins := handlers.AllowedOrigins([]string{"*"})
 
-	user.NewUserRouter(r, *userService)
+	api.NewUserRouter(r, *userService)
+	api.NewGroupRouter(r, *groupService)
 	shoppinglist.NewShoppinglistRouter(r, mongoDbClient, shoppinglistService)
 
 	log.Printf("Starting server on port %s", PORT)

@@ -2,7 +2,8 @@ package shoppinglist
 
 import (
 	"encoding/json"
-	"family-planner/backend/internal/user"
+	// Todo: this dependency needs to be removed
+	"family-planner/backend/internal/family/infrastructure/api"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,9 +22,9 @@ type ShoppinglistRouter struct {
 type ShoppinglistItemDto struct {
 	Name string `json:"name"`
 	// TODO: This can be just the email
-	AddedBy user.UserDto `json:"addedBy"`
-	AddedAt time.Time    `json:"addedAt"`
-	Bought  bool         `json:"bought"`
+	AddedBy api.UserDto `json:"addedBy"`
+	AddedAt time.Time   `json:"addedAt"`
+	Bought  bool        `json:"bought"`
 }
 
 func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, shoppinglistService *ShoppinglistService) *ShoppinglistRouter {

@@ -1,7 +1,8 @@
-package user
+package api
 
 import (
 	"encoding/json"
+	"family-planner/backend/internal/family/domain"
 	"fmt"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 
 type UserRouter struct {
 	router  *mux.Router
-	service UserService
+	service domain.UserService
 }
 
 type UserDto struct {
@@ -18,7 +19,7 @@ type UserDto struct {
 	Email string `json:"email"`
 }
 
-func NewUserRouter(router *mux.Router, service UserService) *UserRouter {
+func NewUserRouter(router *mux.Router, service domain.UserService) *UserRouter {
 	userRouter := &UserRouter{
 		router:  router,
 		service: service,

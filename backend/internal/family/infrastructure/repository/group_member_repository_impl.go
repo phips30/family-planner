@@ -1,7 +1,8 @@
-package groupmember
+package repository
 
 import (
 	"context"
+	"family-planner/backend/internal/family/domain"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -17,7 +18,7 @@ func NewGroupMemberRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *Gr
 	return &GroupMemberRepositoryImpl{ctx: ctx, dbpool: dbpool}
 }
 
-func (gm *GroupMemberRepositoryImpl) Save(groupMember *GroupMember) (*GroupMember, error) {
+func (gm *GroupMemberRepositoryImpl) Save(groupMember *domain.GroupMember) (*domain.GroupMember, error) {
 	query := `INSERT INTO public.group_member (group_id, user_id, created_at) VALUES (@groupId, @userId, @createdAt)`
 	args := pgx.NamedArgs{
 		"groupId":   groupMember.Group.Id,

@@ -1,4 +1,4 @@
-package group
+package domain
 
 type GroupRepository interface {
 	Save(group *Group) (*Group, error)

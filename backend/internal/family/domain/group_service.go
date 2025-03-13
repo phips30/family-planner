@@ -1,20 +1,17 @@
-package group
+package domain
 
 import (
 	"errors"
 	"fmt"
-
-	"family-planner/backend/internal/user"
-	"family-planner/backend/internal/user/groupmember"
 )
 
 type GroupService struct {
 	repository         GroupRepository
-	userService        user.UserService
-	groupMemberService groupmember.GroupMemberService
+	userService        UserService
+	groupMemberService GroupMemberService
 }
 
-func NewGroupService(repository GroupRepository, userService user.UserService, groupMemberService groupmember.GroupMemberService) *GroupService {
+func NewGroupService(repository GroupRepository, userService UserService, groupMemberService GroupMemberService) *GroupService {
 	return &GroupService{
 		repository:         repository,
 		userService:        userService,
@@ -39,7 +36,7 @@ func (g *GroupService) CreateGroup(groupName string, requestedByEmail string) (*
 	if err != nil {
 		return nil, err
 	}
-	_, err = g.groupMemberService.AddMember(addedGroup, *requester)
+	_, err = g.groupMemberService.AddMember(*addedGroup, *requester)
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package group
+package api
 
 import (
 	"encoding/json"
@@ -6,12 +6,14 @@ import (
 	"log"
 	"net/http"
 
+	"family-planner/backend/internal/family/domain"
+
 	"github.com/gorilla/mux"
 )
 
 type GroupRouter struct {
 	router  *mux.Router
-	service GroupService
+	service domain.GroupService
 }
 
 type GroupDto struct {
@@ -19,7 +21,7 @@ type GroupDto struct {
 	Email string `json:"email"`
 }
 
-func NewGroupRouter(router *mux.Router, service GroupService) *GroupRouter {
+func NewGroupRouter(router *mux.Router, service domain.GroupService) *GroupRouter {
 	groupRouter := &GroupRouter{
 		router:  router,
 		service: service,
