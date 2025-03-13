@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -15,9 +16,14 @@ type GroupRouter struct {
 	service service.GroupService
 }
 
-type GroupDto struct {
+type NewGroupDto struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
+}
+
+type GroupMemberDto struct {
+	GroupId uuid.UUID `json:"groupId"`
+	Email   string    `json:"email"`
 }
 
 func NewGroupRouter(router *mux.Router, service service.GroupService) *GroupRouter {
@@ -27,12 +33,13 @@ func NewGroupRouter(router *mux.Router, service service.GroupService) *GroupRout
 	}
 
 	router.HandleFunc("/group", groupRouter.createGroup).Methods("POST")
+	router.HandleFunc("/group/member", groupRouter.addGroupMember).Methods("POST")
 
 	return groupRouter
 }
 
 func (g *GroupRouter) createGroup(w http.ResponseWriter, r *http.Request) {
-	var newGroupRequest *GroupDto
+	var newGroupRequest *NewGroupDto
 
 	if err := json.NewDecoder(r.Body).Decode(&newGroupRequest); err != nil {
 		log.Println("error")
@@ -48,5 +55,25 @@ func (g *GroupRouter) createGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Printf("Group created - Id: %s Name: %s, \n", newGroup.Id, newGroup.Name)
+	w.WriteHeader(http.StatusOK)
+}
+
+func (g *GroupRouter) addGroupMember(w http.ResponseWriter, r *http.Request) {
+	var newGroupMemberRequest *GroupMemberDto
+
+	if err := json.NewDecoder(r.Body).Decode(&newGroupMemberRequest); err != nil {
+		log.Println("error")
+		return
+	}
+
+	log.Printf("Trying to enter group - GroupId: %s, Requested by: %s\n", newGroupMemberRequest.GroupId, newGroupMemberRequest.Email)
+
+	newGroupMember, err := g.service.AddGroupMember(newGroupMemberRequest.GroupId, newGroupMemberRequest.Email)
+	if err != nil || newGroupMember == nil {
+		fmt.Printf("%s", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	fmt.Printf("Entered group - Id: %s Name: %s, \n", newGroupMember.Id, newGroupMember.Name)
 	w.WriteHeader(http.StatusOK)
 }

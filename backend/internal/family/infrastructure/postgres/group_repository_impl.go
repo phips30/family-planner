@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	"family-planner/backend/internal/family/domain/entity"
+	"family-planner/backend/internal/family/domain/repository"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -34,6 +36,37 @@ func (g *GroupRepositoryImpl) Save(group *entity.Group) (*entity.Group, error) {
 	return group, nil
 }
 
-func (g *GroupRepositoryImpl) FindGroupForUser(requestedByEmail string) *entity.Group {
-	panic("unimplemented")
+// TODO: Here we could create an aggregate
+func (g *GroupRepositoryImpl) Find(groupId uuid.UUID) (*entity.Group, error) {
+	var group entity.Group
+	query := `select g.* from public.group g
+				where g.id = @id`
+	args := pgx.NamedArgs{
+		"id": groupId,
+	}
+
+	err := g.dbpool.QueryRow(g.ctx, query, args).Scan(&group.Id, &group.Name, &group.CreatedBy, &group.CreatedAt)
+	if err == pgx.ErrNoRows {
+		return nil, repository.ErrGroupNotFound
+	}
+
+	return &group, nil
+}
+
+func (g *GroupRepositoryImpl) FindGroupForUser(userEmail string) *entity.Group {
+	var group entity.Group
+	query := `select g.* from public.group_member gm
+				join public.group g on g.id = gm.group_id
+				join public.user u on u.id = gm.user_id
+				where u.email = @email`
+	args := pgx.NamedArgs{
+		"email": userEmail,
+	}
+
+	err := g.dbpool.QueryRow(g.ctx, query, args).Scan(&group.Id, &group.Name, &group.CreatedBy, &group.CreatedAt)
+	if err == pgx.ErrNoRows {
+		return nil
+	}
+
+	return &group
 }
