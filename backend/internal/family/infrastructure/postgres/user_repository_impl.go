@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	"family-planner/backend/internal/family/domain"
+	"family-planner/backend/internal/family/domain/entity"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -18,7 +18,7 @@ func NewUserRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *UserRepos
 	return &UserRepositoryImpl{ctx: ctx, dbpool: dbpool}
 }
 
-func (u *UserRepositoryImpl) Create(user *domain.User) (*domain.User, error) {
+func (u *UserRepositoryImpl) Create(user *entity.User) (*entity.User, error) {
 	query := `INSERT INTO public.user (id, name, email, created_at) VALUES (@id, @name, @email, @createdAt)`
 	args := pgx.NamedArgs{
 		"id":        user.Id,
@@ -34,8 +34,8 @@ func (u *UserRepositoryImpl) Create(user *domain.User) (*domain.User, error) {
 	return user, nil
 }
 
-func (u *UserRepositoryImpl) FindByEmail(email string) (*domain.User, error) {
-	var userInDb domain.User
+func (u *UserRepositoryImpl) FindByEmail(email string) (*entity.User, error) {
+	var userInDb entity.User
 	query := `SELECT * FROM public.user where email = @email`
 	args := pgx.NamedArgs{
 		"email": email,

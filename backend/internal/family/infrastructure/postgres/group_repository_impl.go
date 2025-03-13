@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	"family-planner/backend/internal/family/domain"
+	"family-planner/backend/internal/family/domain/entity"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -18,7 +18,7 @@ func NewGroupRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *GroupRep
 	return &GroupRepositoryImpl{ctx: ctx, dbpool: dbpool}
 }
 
-func (g *GroupRepositoryImpl) Save(group *domain.Group) (*domain.Group, error) {
+func (g *GroupRepositoryImpl) Save(group *entity.Group) (*entity.Group, error) {
 	query := `INSERT INTO public.group (id, name, created_by, created_at) VALUES (@id, @name, @createdBy, @createdAt)`
 	args := pgx.NamedArgs{
 		"id":        group.Id,
@@ -34,6 +34,6 @@ func (g *GroupRepositoryImpl) Save(group *domain.Group) (*domain.Group, error) {
 	return group, nil
 }
 
-func (g *GroupRepositoryImpl) FindGroupForUser(requestedByEmail string) *domain.Group {
+func (g *GroupRepositoryImpl) FindGroupForUser(requestedByEmail string) *entity.Group {
 	panic("unimplemented")
 }

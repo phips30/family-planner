@@ -1,17 +1,19 @@
-package domain
+package service
 
 import (
 	"errors"
+	"family-planner/backend/internal/family/domain/entity"
+	"family-planner/backend/internal/family/domain/repository"
 	"fmt"
 )
 
 type GroupService struct {
-	repository         GroupRepository
+	repository         repository.GroupRepository
 	userService        UserService
 	groupMemberService GroupMemberService
 }
 
-func NewGroupService(repository GroupRepository, userService UserService, groupMemberService GroupMemberService) *GroupService {
+func NewGroupService(repository repository.GroupRepository, userService UserService, groupMemberService GroupMemberService) *GroupService {
 	return &GroupService{
 		repository:         repository,
 		userService:        userService,
@@ -19,7 +21,7 @@ func NewGroupService(repository GroupRepository, userService UserService, groupM
 	}
 }
 
-func (g *GroupService) CreateGroup(groupName string, requestedByEmail string) (*Group, error) {
+func (g *GroupService) CreateGroup(groupName string, requestedByEmail string) (*entity.Group, error) {
 	validation_error := g.validate(groupName, requestedByEmail)
 	if validation_error != nil {
 		return nil, fmt.Errorf("%s", validation_error.Error())
@@ -30,7 +32,7 @@ func (g *GroupService) CreateGroup(groupName string, requestedByEmail string) (*
 		return nil, err
 	}
 
-	group := NewGroup(groupName, *requester)
+	group := entity.NewGroup(groupName, *requester)
 
 	addedGroup, err := g.repository.Save(&group)
 	if err != nil {

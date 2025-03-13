@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"family-planner/backend/internal/db"
-	"family-planner/backend/internal/family/domain"
+	"family-planner/backend/internal/family/domain/service"
 	"family-planner/backend/internal/family/infrastructure/api"
 	"family-planner/backend/internal/family/infrastructure/postgres"
 	"family-planner/backend/internal/shoppinglist"
@@ -56,9 +56,9 @@ func main() {
 	shoppinglistRepository := shoppinglist.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
 
 	// Define Services
-	userService := domain.NewUserService(userRepository)
-	groupMemberService := domain.NewGroupMemberService(groupMemberRepository)
-	groupService := domain.NewGroupService(groupRepository, *userService, *groupMemberService)
+	userService := service.NewUserService(userRepository)
+	groupMemberService := service.NewGroupMemberService(groupMemberRepository)
+	groupService := service.NewGroupService(groupRepository, *userService, *groupMemberService)
 	shoppinglistService := shoppinglist.NewShoppinglistService(shoppinglistRepository)
 
 	// Define Routing

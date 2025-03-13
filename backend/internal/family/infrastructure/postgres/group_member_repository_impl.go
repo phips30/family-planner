@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	"family-planner/backend/internal/family/domain"
+	"family-planner/backend/internal/family/domain/entity"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -18,7 +18,7 @@ func NewGroupMemberRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *Gr
 	return &GroupMemberRepositoryImpl{ctx: ctx, dbpool: dbpool}
 }
 
-func (gm *GroupMemberRepositoryImpl) Save(groupMember *domain.GroupMember) (*domain.GroupMember, error) {
+func (gm *GroupMemberRepositoryImpl) Save(groupMember *entity.GroupMember) (*entity.GroupMember, error) {
 	query := `INSERT INTO public.group_member (group_id, user_id, created_at) VALUES (@groupId, @userId, @createdAt)`
 	args := pgx.NamedArgs{
 		"groupId":   groupMember.Group.Id,
