@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"family-planner/backend/internal/family/domain/aggregate"
 	"family-planner/backend/internal/family/domain/entity"
 	"family-planner/backend/internal/family/domain/repository"
 	"fmt"
@@ -12,12 +13,16 @@ import (
 )
 
 type GroupRepositoryImpl struct {
-	ctx    context.Context
-	dbpool *pgxpool.Pool
+	ctx                   context.Context
+	dbpool                *pgxpool.Pool
+	groupMemberRepository GroupMemberRepositoryImpl
 }
 
 func NewGroupRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *GroupRepositoryImpl {
-	return &GroupRepositoryImpl{ctx: ctx, dbpool: dbpool}
+	return &GroupRepositoryImpl{
+		ctx:                   ctx,
+		dbpool:                dbpool,
+		groupMemberRepository: *NewGroupMemberRepositoryImpl(ctx, dbpool)}
 }
 
 func (g *GroupRepositoryImpl) Save(group *entity.Group) (*entity.Group, error) {
@@ -36,8 +41,7 @@ func (g *GroupRepositoryImpl) Save(group *entity.Group) (*entity.Group, error) {
 	return group, nil
 }
 
-// TODO: Here we could create an aggregate
-func (g *GroupRepositoryImpl) Find(groupId uuid.UUID) (*entity.Group, error) {
+func (g *GroupRepositoryImpl) Find(groupId uuid.UUID) (*aggregate.GroupAgg, error) {
 	var group entity.Group
 	query := `select g.* from public.group g
 				where g.id = @id`
@@ -50,7 +54,18 @@ func (g *GroupRepositoryImpl) Find(groupId uuid.UUID) (*entity.Group, error) {
 		return nil, repository.ErrGroupNotFound
 	}
 
-	return &group, nil
+	fmt.Println(group.Id)
+	groupMembers, err := g.groupMemberRepository.FindMembers(group.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	groupAgg := aggregate.GroupAgg{
+		Group:        &group,
+		GroupMembers: groupMembers,
+	}
+
+	return &groupAgg, nil
 }
 
 func (g *GroupRepositoryImpl) FindGroupForUser(userEmail string) *entity.Group {

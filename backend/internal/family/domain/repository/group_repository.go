@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"family-planner/backend/internal/family/domain/aggregate"
 	"family-planner/backend/internal/family/domain/entity"
 
 	"github.com/google/uuid"
@@ -13,6 +14,6 @@ var (
 
 type GroupRepository interface {
 	Save(group *entity.Group) (*entity.Group, error)
-	Find(groupId uuid.UUID) (*entity.Group, error)
+	Find(groupId uuid.UUID) (*aggregate.GroupAgg, error)
 	FindGroupForUser(email string) *entity.Group
 }

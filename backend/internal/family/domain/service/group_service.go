@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"family-planner/backend/internal/family/domain/aggregate"
 	"family-planner/backend/internal/family/domain/entity"
 	"family-planner/backend/internal/family/domain/repository"
 	"fmt"
@@ -49,7 +50,7 @@ func (g *GroupService) CreateGroup(groupName string, requestedByEmail string) (*
 }
 
 func (g GroupService) AddGroupMember(groupId uuid.UUID, requestedByEmail string) (*entity.Group, error) {
-	group, err := g.repository.Find(groupId)
+	groupAgg, err := g.repository.Find(groupId)
 	if err != nil {
 		return nil, err
 	}
@@ -64,12 +65,17 @@ func (g GroupService) AddGroupMember(groupId uuid.UUID, requestedByEmail string)
 		return nil, errors.New("user is already in a group")
 	}
 
-	_, err = g.groupMemberService.AddMember(*group, *requester)
+	_, err = g.groupMemberService.AddMember(*groupAgg.Group, *requester)
 	if err != nil {
 		return nil, err
 	}
 
-	return group, nil
+	return groupAgg.Group, nil
+}
+
+func (g GroupService) FindGroupMembers(groupId uuid.UUID) (*aggregate.GroupAgg, error) {
+
+	return g.repository.Find(groupId)
 }
 
 func (g *GroupService) validate(groupName string, requestedByEmail string) error {

@@ -5,6 +5,7 @@ import (
 	"family-planner/backend/internal/family/domain/entity"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -31,4 +32,30 @@ func (gm *GroupMemberRepositoryImpl) Save(groupMember *entity.GroupMember) (*ent
 	}
 
 	return groupMember, nil
+}
+
+func (gm *GroupMemberRepositoryImpl) FindMembers(groupId uuid.UUID) ([]*entity.User, error) {
+	query := `select u.* from public.group_member gm
+				join public.user u on u.id = gm.user_id
+				where gm.group_id = @groupId`
+	args := pgx.NamedArgs{
+		"groupId": groupId,
+	}
+
+	rows, err := gm.dbpool.Query(gm.ctx, query, args)
+	if err != nil && err != pgx.ErrNoRows {
+		return nil, err
+	}
+
+	var users []*entity.User
+	for rows.Next() {
+		var user entity.User
+		err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	return users, nil
 }
