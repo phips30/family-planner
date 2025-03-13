@@ -9,7 +9,7 @@ import (
 	"family-planner/backend/internal/db"
 	"family-planner/backend/internal/family/domain"
 	"family-planner/backend/internal/family/infrastructure/api"
-	"family-planner/backend/internal/family/infrastructure/repository"
+	"family-planner/backend/internal/family/infrastructure/postgres"
 	"family-planner/backend/internal/shoppinglist"
 
 	"github.com/gorilla/handlers"
@@ -50,9 +50,9 @@ func main() {
 	}
 
 	// Define Repositories
-	userRepository := repository.NewUserRepositoryImpl(ctx, dbpool)
-	groupMemberRepository := repository.NewGroupMemberRepositoryImpl(ctx, dbpool)
-	groupRepository := repository.NewGroupRepositoryImpl(ctx, dbpool)
+	userRepository := postgres.NewUserRepositoryImpl(ctx, dbpool)
+	groupMemberRepository := postgres.NewGroupMemberRepositoryImpl(ctx, dbpool)
+	groupRepository := postgres.NewGroupRepositoryImpl(ctx, dbpool)
 	shoppinglistRepository := shoppinglist.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
 
 	// Define Services
