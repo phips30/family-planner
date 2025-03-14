@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"family-planner/backend/internal/family/domain/entity"
-	"family-planner/backend/internal/family/domain/repository"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -44,7 +43,7 @@ func (u *UserRepositoryImpl) FindByEmail(email string) (*entity.User, error) {
 
 	err := u.dbpool.QueryRow(u.ctx, query, args).Scan(&userInDb.Id, &userInDb.Name, &userInDb.Email, &userInDb.CreatedAt)
 	if err == pgx.ErrNoRows {
-		return nil, repository.ErrUserNotFound
+		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("unable to query user table: %w", err)

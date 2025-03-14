@@ -4,16 +4,24 @@ import (
 	"time"
 )
 
+type EntityStatus int
+
+const (
+	Exists EntityStatus = iota
+	New
+	Delete
+)
+
 type GroupMember struct {
-	Group     Group
-	User      User
+	User      *User
 	CreatedAt time.Time
+	Status    EntityStatus
 }
 
-func NewGroupMember(group Group, user User) GroupMember {
-	return GroupMember{
-		Group:     group,
+func NewGroupMember(user *User) *GroupMember {
+	return &GroupMember{
 		User:      user,
 		CreatedAt: time.Now(),
+		Status:    New,
 	}
 }

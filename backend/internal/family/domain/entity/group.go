@@ -13,8 +13,8 @@ type Group struct {
 	CreatedAt time.Time
 }
 
-func NewGroup(name string, createdBy User) Group {
-	return Group{
+func NewGroup(name string, createdBy User) *Group {
+	return &Group{
 		Id:        uuid.New(),
 		Name:      name,
 		CreatedBy: createdBy,

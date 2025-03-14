@@ -17,8 +17,8 @@ type GroupRouter struct {
 }
 
 type NewGroupDto struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	GroupName string `json:"groupName"`
+	Email     string `json:"email"`
 }
 
 type GroupMemberDto struct {
@@ -53,9 +53,9 @@ func (g *GroupRouter) createGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Trying to create new group - Name: %s, Requested by: %s\n", newGroupRequest.Email, newGroupRequest.Email)
+	log.Printf("Trying to create new group - Name: %s, Requested by: %s\n", newGroupRequest.GroupName, newGroupRequest.Email)
 
-	newGroup, err := g.service.CreateGroup(newGroupRequest.Name, newGroupRequest.Email)
+	newGroup, err := g.service.CreateGroup(newGroupRequest.GroupName, newGroupRequest.Email)
 	if err != nil || newGroup == nil {
 		fmt.Printf("%s", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -81,7 +81,7 @@ func (g *GroupRouter) addGroupMember(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("Entered group - Id: %s Name: %s, \n", newGroupMember.Id, newGroupMember.Name)
+	fmt.Printf("Entered group -Name: %s, \n", newGroupMember.Group.Name)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -95,6 +95,7 @@ func (g *GroupRouter) getGroupMembers(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Trying to find group members for group id: %s\n", groupId)
 
 	groupAgg, _ := g.service.FindGroupMembers(groupId)
+	fmt.Println(groupAgg.Group.Id)
 	if groupAgg == nil {
 		fmt.Printf("Group not found %s", groupAgg)
 		http.Error(w, "User not found", http.StatusBadRequest)
@@ -102,8 +103,8 @@ func (g *GroupRouter) getGroupMembers(w http.ResponseWriter, r *http.Request) {
 		var groupMembers []UserDto
 		for _, groupMember := range groupAgg.GroupMembers {
 			groupMembers = append(groupMembers, UserDto{
-				Name:  groupMember.Name,
-				Email: groupMember.Email,
+				Name:  groupMember.User.Name,
+				Email: groupMember.User.Email,
 			})
 		}
 

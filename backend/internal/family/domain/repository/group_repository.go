@@ -13,7 +13,8 @@ var (
 )
 
 type GroupRepository interface {
-	Save(group *entity.Group) (*entity.Group, error)
 	Find(groupId uuid.UUID) (*aggregate.GroupAgg, error)
 	FindGroupForUser(email string) *entity.Group
+	Save(group *entity.Group) (*entity.Group, error)
+	SaveGroupMember(group *entity.Group, groupMembers []*entity.GroupMember) error
 }

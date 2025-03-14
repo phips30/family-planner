@@ -51,14 +51,12 @@ func main() {
 
 	// Define Repositories
 	userRepository := postgres.NewUserRepositoryImpl(ctx, dbpool)
-	groupMemberRepository := postgres.NewGroupMemberRepositoryImpl(ctx, dbpool)
 	groupRepository := postgres.NewGroupRepositoryImpl(ctx, dbpool)
 	shoppinglistRepository := shoppinglist.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
 
 	// Define Services
 	userService := service.NewUserService(userRepository)
-	groupMemberService := service.NewGroupMemberService(groupMemberRepository)
-	groupService := service.NewGroupService(groupRepository, *userService, *groupMemberService)
+	groupService := service.NewGroupService(groupRepository, *userService)
 	shoppinglistService := shoppinglist.NewShoppinglistService(shoppinglistRepository)
 
 	// Define Routing
