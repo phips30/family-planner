@@ -5,6 +5,7 @@ import (
 	"family-planner/backend/internal/family/domain/entity"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -34,20 +35,33 @@ func (u *UserRepositoryImpl) Create(user *entity.User) (*entity.User, error) {
 	return user, nil
 }
 
+func (u *UserRepositoryImpl) FindById(userId uuid.UUID) (*entity.User, error) {
+	query := `SELECT u.* FROM public.user u 
+				where u.id = @id`
+	args := pgx.NamedArgs{
+		"id": userId,
+	}
+	return u.findAndMapToUser(query, args)
+}
+
 func (u *UserRepositoryImpl) FindByEmail(email string) (*entity.User, error) {
-	var userInDb entity.User
-	query := `SELECT * FROM public.user where email = @email`
+	query := `SELECT u.* FROM public.user u 
+				where u.email = @email`
 	args := pgx.NamedArgs{
 		"email": email,
 	}
+	return u.findAndMapToUser(query, args)
+}
 
-	err := u.dbpool.QueryRow(u.ctx, query, args).Scan(&userInDb.Id, &userInDb.Name, &userInDb.Email, &userInDb.CreatedAt)
+func (u *UserRepositoryImpl) findAndMapToUser(query string, args pgx.NamedArgs) (*entity.User, error) {
+	var user entity.User
+	err := u.dbpool.QueryRow(u.ctx, query, args).Scan(&user.Id, &user.Name, &user.Email, &user.CreatedAt)
+
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("unable to query user table: %w", err)
 	}
-
-	return &userInDb, nil
+	return &user, nil
 }

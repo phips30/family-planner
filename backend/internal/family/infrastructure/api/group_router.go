@@ -39,8 +39,8 @@ func NewGroupRouter(router *mux.Router, service service.GroupService) *GroupRout
 	}
 
 	router.HandleFunc("/group", groupRouter.createGroup).Methods("POST")
+	router.HandleFunc("/group/{groupId}", groupRouter.getGroup).Methods("GET")
 	router.HandleFunc("/group/member", groupRouter.addGroupMember).Methods("POST")
-	router.HandleFunc("/group/member/{groupId}", groupRouter.getGroupMembers).Methods("GET")
 
 	return groupRouter
 }
@@ -85,7 +85,7 @@ func (g *GroupRouter) addGroupMember(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (g *GroupRouter) getGroupMembers(w http.ResponseWriter, r *http.Request) {
+func (g *GroupRouter) getGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupId, err := uuid.Parse(vars["groupId"])
 	if err != nil {
@@ -95,10 +95,8 @@ func (g *GroupRouter) getGroupMembers(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Trying to find group members for group id: %s\n", groupId)
 
 	groupAgg, _ := g.service.FindGroupMembers(groupId)
-	fmt.Println(groupAgg.Group.Id)
 	if groupAgg == nil {
-		fmt.Printf("Group not found %s", groupAgg)
-		http.Error(w, "User not found", http.StatusBadRequest)
+		http.Error(w, "Group not found", http.StatusBadRequest)
 	} else {
 		var groupMembers []UserDto
 		for _, groupMember := range groupAgg.GroupMembers {

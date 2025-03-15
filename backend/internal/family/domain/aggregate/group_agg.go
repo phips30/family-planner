@@ -33,11 +33,12 @@ func CreateNewGroupAgg(name string, createdBy *entity.User) (*GroupAgg, error) {
 	return groupAgg, nil
 }
 
-func FromExistingGroupAgg(group *entity.Group, groupMembers []*entity.GroupMember) *GroupAgg {
+func FromExistingGroupAgg(group *entity.Group, creator *entity.User, groupMembers []*entity.GroupMember) *GroupAgg {
 	for _, groupMember := range groupMembers {
 		groupMember.Status = entity.Exists
 	}
 
+	group.CreatedBy = *creator
 	return &GroupAgg{
 		Group:        group,
 		GroupMembers: groupMembers,

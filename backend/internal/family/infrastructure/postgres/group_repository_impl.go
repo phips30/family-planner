@@ -6,6 +6,7 @@ import (
 	"family-planner/backend/internal/family/domain/entity"
 	"family-planner/backend/internal/family/domain/repository"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -13,14 +14,16 @@ import (
 )
 
 type GroupRepositoryImpl struct {
-	ctx    context.Context
-	dbpool *pgxpool.Pool
+	ctx            context.Context
+	dbpool         *pgxpool.Pool
+	userRepository repository.UserRepository
 }
 
-func NewGroupRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool) *GroupRepositoryImpl {
+func NewGroupRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool, userRepository repository.UserRepository) *GroupRepositoryImpl {
 	return &GroupRepositoryImpl{
-		ctx:    ctx,
-		dbpool: dbpool,
+		ctx:            ctx,
+		dbpool:         dbpool,
+		userRepository: userRepository,
 	}
 }
 
@@ -69,30 +72,34 @@ func (g *GroupRepositoryImpl) SaveGroupMember(group *entity.Group, groupMembers 
 }
 
 func (g *GroupRepositoryImpl) Find(groupId uuid.UUID) (*aggregate.GroupAgg, error) {
-	query := `select g.* from public.group g
+	query := `select g.id, g.name, g.created_by, g.created_at from public.group g
 				where g.id = @id`
 	args := pgx.NamedArgs{
 		"id": groupId,
 	}
 
 	var group entity.Group
-	group.CreatedBy = entity.User{}
+	var createdById uuid.UUID
 	err := g.dbpool.QueryRow(g.ctx, query, args).Scan(
 		&group.Id,
 		&group.Name,
-		&group.CreatedBy.Id,
+		&createdById,
 		&group.CreatedAt)
 	if err == pgx.ErrNoRows {
 		return nil, repository.ErrGroupNotFound
 	}
-	fmt.Println(group.Id)
+
+	groupCreator, err := g.userRepository.FindById(createdById)
+	if err != nil {
+		log.Print(err.Error())
+	}
 
 	groupMembers, err := g.findMembers(group.Id)
 	if err != nil {
-		return nil, err
+		log.Print(err.Error())
 	}
 
-	return aggregate.FromExistingGroupAgg(&group, groupMembers), nil
+	return aggregate.FromExistingGroupAgg(&group, groupCreator, groupMembers), nil
 }
 
 func (g *GroupRepositoryImpl) FindGroupForUser(userEmail string) *entity.Group {
@@ -125,7 +132,6 @@ func (gm *GroupRepositoryImpl) findMembers(groupId uuid.UUID) ([]*entity.GroupMe
 	if err != nil && err != pgx.ErrNoRows {
 		return nil, err
 	}
-	fmt.Println("no error until here")
 	var groupMembers []*entity.GroupMember
 	for rows.Next() {
 		var groupMember entity.GroupMember
@@ -143,7 +149,6 @@ func (gm *GroupRepositoryImpl) findMembers(groupId uuid.UUID) ([]*entity.GroupMe
 		groupMember.User = &user
 		groupMembers = append(groupMembers, &groupMember)
 	}
-	fmt.Println("all loaded")
 
 	return groupMembers, nil
 }
