@@ -26,7 +26,7 @@ func NewGroupService(repository repository.GroupRepository, userService UserServ
 }
 
 func (g *GroupService) CreateGroup(groupName string, requestedByEmail string) (*entity.Group, error) {
-	userAlreadyInGroup := g.repository.FindGroupForUser(requestedByEmail)
+	userAlreadyInGroup, _ := g.repository.FindGroupForUser(requestedByEmail)
 	if userAlreadyInGroup != nil {
 		return nil, errors.New("user is already in a group")
 	}
@@ -63,7 +63,7 @@ func (g GroupService) AddGroupMember(groupId uuid.UUID, requestedByEmail string)
 		return nil, err
 	}
 
-	userAlreadyInAnyGroup := g.repository.FindGroupForUser(requestedByEmail)
+	userAlreadyInAnyGroup, _ := g.repository.FindGroupForUser(requestedByEmail)
 	if userAlreadyInAnyGroup != nil {
 		return nil, ErrUserAlreadyInGroup
 	}
@@ -80,14 +80,6 @@ func (g GroupService) FindGroupMembers(groupId uuid.UUID) (*aggregate.GroupAgg, 
 	return g.repository.Find(groupId)
 }
 
-func (g *GroupService) validate(groupName string, requestedByEmail string) error {
-	userAlreadyInGroup := g.repository.FindGroupForUser(requestedByEmail)
-
-	if userAlreadyInGroup != nil {
-		return errors.New("user is already in a group")
-	}
-	if groupName == "" {
-		return errors.New("group name cannot be empty")
-	}
-	return nil
+func (g GroupService) FindGroupMembersByEmail(email string) (*aggregate.GroupAgg, error) {
+	return g.repository.FindGroupForUser(email)
 }

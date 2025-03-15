@@ -102,9 +102,8 @@ func (g *GroupRepositoryImpl) Find(groupId uuid.UUID) (*aggregate.GroupAgg, erro
 	return aggregate.FromExistingGroupAgg(&group, groupCreator, groupMembers), nil
 }
 
-func (g *GroupRepositoryImpl) FindGroupForUser(userEmail string) *entity.Group {
-	var group entity.Group
-	query := `select g.* from public.group_member gm
+func (g *GroupRepositoryImpl) FindGroupForUser(userEmail string) (*aggregate.GroupAgg, error) {
+	query := `select g.id from public.group_member gm
 				join public.group g on g.id = gm.group_id
 				join public.user u on u.id = gm.user_id
 				where u.email = @email`
@@ -112,12 +111,13 @@ func (g *GroupRepositoryImpl) FindGroupForUser(userEmail string) *entity.Group {
 		"email": userEmail,
 	}
 
-	err := g.dbpool.QueryRow(g.ctx, query, args).Scan(&group.Id, &group.Name, &group.CreatedBy, &group.CreatedAt)
+	var groupId uuid.UUID
+	err := g.dbpool.QueryRow(g.ctx, query, args).Scan(&groupId)
 	if err == pgx.ErrNoRows {
-		return nil
+		return nil, repository.ErrGroupNotFound
 	}
 
-	return &group
+	return g.Find(groupId)
 }
 
 func (gm *GroupRepositoryImpl) findMembers(groupId uuid.UUID) ([]*entity.GroupMember, error) {

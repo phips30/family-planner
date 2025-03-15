@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -26,10 +27,15 @@ type GroupMemberDto struct {
 	Email   string    `json:"email"`
 }
 
-type GroupDto struct {
-	GroupId uuid.UUID `json:"groupId"`
-	Name    string    `json:"name"`
-	Members []UserDto `json:"members"`
+type GroupMemberResponseDto struct {
+	User     UserDto   `json:"user"`
+	JoinedAt time.Time `json:"joinedAt"`
+}
+
+type GroupResponseDto struct {
+	GroupId uuid.UUID                `json:"groupId"`
+	Name    string                   `json:"name"`
+	Members []GroupMemberResponseDto `json:"members"`
 }
 
 func NewGroupRouter(router *mux.Router, service service.GroupService) *GroupRouter {
@@ -39,7 +45,7 @@ func NewGroupRouter(router *mux.Router, service service.GroupService) *GroupRout
 	}
 
 	router.HandleFunc("/group", groupRouter.createGroup).Methods("POST")
-	router.HandleFunc("/group/{groupId}", groupRouter.getGroup).Methods("GET")
+	router.HandleFunc("/group/{email}", groupRouter.getGroupByUserEmail).Methods("GET")
 	router.HandleFunc("/group/member", groupRouter.addGroupMember).Methods("POST")
 
 	return groupRouter
@@ -85,28 +91,25 @@ func (g *GroupRouter) addGroupMember(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (g *GroupRouter) getGroup(w http.ResponseWriter, r *http.Request) {
+func (g *GroupRouter) getGroupByUserEmail(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	groupId, err := uuid.Parse(vars["groupId"])
-	if err != nil {
-		http.Error(w, "No proper UUID provided", http.StatusBadRequest)
-	}
+	email := vars["email"]
 
-	fmt.Printf("Trying to find group members for group id: %s\n", groupId)
+	fmt.Printf("Trying to find group members for email: %s\n", email)
 
-	groupAgg, _ := g.service.FindGroupMembers(groupId)
+	groupAgg, _ := g.service.FindGroupMembersByEmail(email)
 	if groupAgg == nil {
 		http.Error(w, "Group not found", http.StatusBadRequest)
 	} else {
-		var groupMembers []UserDto
+		var groupMembers []GroupMemberResponseDto
 		for _, groupMember := range groupAgg.GroupMembers {
-			groupMembers = append(groupMembers, UserDto{
-				Name:  groupMember.User.Name,
-				Email: groupMember.User.Email,
+			groupMembers = append(groupMembers, GroupMemberResponseDto{
+				User:     UserDto{Name: groupMember.User.Name, Email: groupMember.User.Email},
+				JoinedAt: groupMember.CreatedAt,
 			})
 		}
 
-		json.NewEncoder(w).Encode(GroupDto{
+		json.NewEncoder(w).Encode(GroupResponseDto{
 			GroupId: groupAgg.Group.Id,
 			Name:    groupAgg.Group.Name,
 			Members: groupMembers})

@@ -14,7 +14,7 @@ var (
 
 type GroupRepository interface {
 	Find(groupId uuid.UUID) (*aggregate.GroupAgg, error)
-	FindGroupForUser(email string) *entity.Group
+	FindGroupForUser(email string) (*aggregate.GroupAgg, error)
 	Save(group *entity.Group) (*entity.Group, error)
 	SaveGroupMember(group *entity.Group, groupMembers []*entity.GroupMember) error
 }
