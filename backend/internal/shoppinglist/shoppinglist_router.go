@@ -3,12 +3,13 @@ package shoppinglist
 import (
 	"encoding/json"
 	// Todo: this dependency needs to be removed
-	"family-planner/backend/internal/family/infrastructure/api"
+
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -20,11 +21,10 @@ type ShoppinglistRouter struct {
 }
 
 type ShoppinglistItemDto struct {
-	Name string `json:"name"`
-	// TODO: This can be just the email
-	AddedBy api.UserDto `json:"addedBy"`
-	AddedAt time.Time   `json:"addedAt"`
-	Bought  bool        `json:"bought"`
+	Name          string    `json:"name"`
+	AddedByUserId uuid.UUID `json:"addedByUserId"`
+	AddedAt       time.Time `json:"addedAt"`
+	Bought        bool      `json:"bought"`
 }
 
 func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, shoppinglistService *ShoppinglistService) *ShoppinglistRouter {
@@ -34,17 +34,18 @@ func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, sh
 		service:       shoppinglistService,
 	}
 
-	router.HandleFunc("/shopping-list", shoppinglistRouter.findList).Methods("GET")
+	router.HandleFunc("/shopping-list/{userId}", shoppinglistRouter.findList).Methods("GET")
 	router.HandleFunc("/shopping-list", shoppinglistRouter.createList).Methods("POST")
+	router.HandleFunc("/shopping-list/{item}", shoppinglistRouter.createList).Methods("POST")
 
 	return shoppinglistRouter
 }
 
 func (s *ShoppinglistRouter) findList(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-	email := params.Get("email")
+	vars := mux.Vars(r)
+	userId := vars["userId"]
 
-	fmt.Printf("Trying to find shopping list - Email: %s\n", email)
+	fmt.Printf("Trying to find shopping list - UserId: %s\n", userId)
 }
 
 func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +61,7 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 		shoppinglistItem := NewShoppinglistItem(
 			shoppinglistItemDto.Name,
 			shoppinglistItemDto.AddedAt,
-			shoppinglistItemDto.AddedBy.Email,
+			shoppinglistItemDto.AddedByUserId,
 			shoppinglistItemDto.Bought)
 
 		shoppinglist = append(shoppinglist, *shoppinglistItem)

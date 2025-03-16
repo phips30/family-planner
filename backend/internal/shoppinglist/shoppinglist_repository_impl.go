@@ -41,10 +41,10 @@ func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []ShoppinglistItem
 	return nil, fmt.Errorf("could not insert all documents into mongodb")
 }
 
-func (s *ShoppinglistRepositoryImpl) FindAllInGroup(group uuid.UUID) ([]ShoppinglistItem, error) {
+func (s *ShoppinglistRepositoryImpl) FindAllForUserIds(userIds []uuid.UUID) ([]ShoppinglistItem, error) {
 	var results []ShoppinglistItem
 	findOptions := options.Find()
-	filter := bson.M{"group": group}
+	filter := bson.M{"userId": bson.M{"$in": userIds}}
 	cursor, err := s.mongoDbCollection.Find(s.ctx, filter, findOptions)
 
 	if err != nil {
@@ -53,7 +53,6 @@ func (s *ShoppinglistRepositoryImpl) FindAllInGroup(group uuid.UUID) ([]Shopping
 	}
 	defer cursor.Close(s.ctx)
 
-	// Iterate through the results
 	for cursor.Next(s.ctx) {
 		var item ShoppinglistItem
 		err := cursor.Decode(&item)
@@ -70,9 +69,8 @@ func (s *ShoppinglistRepositoryImpl) FindAllInGroup(group uuid.UUID) ([]Shopping
 		log.Fatal(err)
 		return nil, err
 	}
-	// Print the results
 	for _, result := range results {
-		fmt.Printf("Name: %s, addedby: %s\n", result.Name, result.AddedBy)
+		fmt.Printf("Name: %s, addedby: %s\n", result.Name, result.UserId)
 	}
 	return results, nil
 }

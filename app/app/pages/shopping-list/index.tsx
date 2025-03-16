@@ -26,7 +26,7 @@ export namespace ShoppingItem {
 }
 
 export default function ShoppingList() {
-    const { loggedInUser } = useContext(UserContext);
+    const {loggedInUser} = useContext(UserContext);
 
     const [newItemName, setNewItemName] = useState('');
     const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
@@ -35,6 +35,14 @@ export default function ShoppingList() {
     const hideShoppingItemAlreadyExistsDlg = () => setShoppingItemAlreadyExistsDlgVisible(false);
 
     useEffect(() => {
+        axios.get<ShoppingItem[]>(`${API_URL}/shopping-list/${loggedInUser.email}`)
+            .then(response => {
+                setShoppingList(response.data);
+            })
+            .catch(err => {
+                console.error(err);
+            });
+        /*
         InMemoryDb.getData("shopping-list")
             .then(e => {
                 console.log("shopping-list: " + e)
@@ -44,11 +52,8 @@ export default function ShoppingList() {
             .catch(e => {
                 console.error("not found: " + e)
             });
+         */
     }, [])
-
-    function openShareModal(): void {
-        router.push("./share")
-    }
 
     function addShoppingItem(name: string): void {
         if (shoppingList.findIndex(item => item.name === name) == -1) {
@@ -107,20 +112,20 @@ export default function ShoppingList() {
                             <View key={index}>
                                 <Card>
                                     <Card.Title
-                                    title={item.name}
-                                    subtitle={"Added by: " + item.addedBy.name}
-                                    left={(props) =>
-                                        <IconButton
-                                            icon="delete"
-                                            iconColor={MD3Colors.error50}
-                                            size={20}
-                                            onPress={() => removeItem(item, props)}/>
-                                    }
-                                    right={(props) =>
-                                        <IconButton
-                                            icon={item.bought ? "check" : "crop-square"}
-                                            size={20}
-                                            onPress={() => handleItemBought(item)}/>
+                                        title={item.name}
+                                        subtitle={"Added by: " + item.addedBy.name}
+                                        left={(props) =>
+                                            <IconButton
+                                                icon="delete"
+                                                iconColor={MD3Colors.error50}
+                                                size={20}
+                                                onPress={() => removeItem(item, props)}/>
+                                        }
+                                        right={(props) =>
+                                            <IconButton
+                                                icon={item.bought ? "check" : "crop-square"}
+                                                size={20}
+                                                onPress={() => handleItemBought(item)}/>
                                         }
                                     />
                                 </Card>
@@ -145,10 +150,12 @@ export default function ShoppingList() {
                     </Button>
 
                     <Portal>
-                        <Dialog visible={shoppingItemAlreadyExistsDlgVisible} onDismiss={hideShoppingItemAlreadyExistsDlg}>
+                        <Dialog visible={shoppingItemAlreadyExistsDlgVisible}
+                                onDismiss={hideShoppingItemAlreadyExistsDlg}>
                             <Dialog.Title>Item already exists</Dialog.Title>
                             <Dialog.Content>
-                                <Text variant="displaySmall">The item already exists in the list and cannot be added twice.</Text>
+                                <Text variant="displaySmall">The item already exists in the list and cannot be added
+                                    twice.</Text>
                             </Dialog.Content>
                             <Dialog.Actions>
                                 <Button onPress={hideShoppingItemAlreadyExistsDlg}>Ok</Button>
@@ -164,14 +171,14 @@ export default function ShoppingList() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 10,
-    },
-    input: {
-        marginBottom: 16,
-    },
-    button: {
-        marginTop: 8,
-    },
+container: {
+flex: 1,
+padding: 10,
+},
+input: {
+marginBottom: 16,
+},
+button: {
+marginTop: 8,
+},
 });

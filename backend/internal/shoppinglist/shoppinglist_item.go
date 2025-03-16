@@ -2,20 +2,22 @@ package shoppinglist
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ShoppinglistItem struct {
 	Name    string
 	AddedAt time.Time
-	AddedBy string
+	UserId  uuid.UUID
 	Bought  bool
 }
 
-func NewShoppinglistItem(name string, addedAt time.Time, addedBy string, bought bool) *ShoppinglistItem {
+func NewShoppinglistItem(name string, addedAt time.Time, userId uuid.UUID, bought bool) *ShoppinglistItem {
 	return &ShoppinglistItem{
 		Name:    name,
 		AddedAt: addedAt,
-		AddedBy: addedBy,
+		UserId:  userId,
 		Bought:  bought,
 	}
 }

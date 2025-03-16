@@ -4,14 +4,37 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ShoppinglistService struct {
-	repository ShoppinglistRepository
+	repository     ShoppinglistRepository
+	familyDataPort FamilyDataPort
 }
 
-func NewShoppinglistService(repository ShoppinglistRepository) *ShoppinglistService {
-	return &ShoppinglistService{repository: repository}
+var (
+	errRetrievingGroupData = errors.New("error getting group information for user")
+)
+
+func NewShoppinglistService(repository ShoppinglistRepository, familyDataPort FamilyDataPort) *ShoppinglistService {
+	return &ShoppinglistService{repository: repository, familyDataPort: familyDataPort}
+}
+
+func (s *ShoppinglistService) LoadShoppingListForUserid(userid uuid.UUID) ([]ShoppinglistItem, error) {
+	groupData, err := s.familyDataPort.GetGroupData(userid)
+	if err != nil {
+		return nil, errRetrievingGroupData
+	}
+	if groupData == nil {
+		return s.repository.FindAllForUserIds([]uuid.UUID{userid})
+	} else {
+		var userIds []uuid.UUID
+		for _, member := range groupData.Members {
+			userIds = append(userIds, member.UserId)
+		}
+		return s.repository.FindAllForUserIds(userIds)
+	}
 }
 
 func (s *ShoppinglistService) SaveShoppingList(shoppinglist []ShoppinglistItem) ([]ShoppinglistItem, error) {
