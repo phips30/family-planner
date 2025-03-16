@@ -74,6 +74,11 @@ export default function HomeScreen() {
                             <Text>Go to shopping list</Text>
                         </Button>
                     </Link>
+                    <Link href="/pages/group" asChild>
+                        <Button mode="outlined" style={styles.button}>
+                            <Text>Go to group overview</Text>
+                        </Button>
+                    </Link>
                 </>
                 :
                 <>

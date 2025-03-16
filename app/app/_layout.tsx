@@ -24,6 +24,9 @@ export default function RootLayout() {
                     <Stack.Screen name="pages/shopping-list/index" options={{
                         title: "Shopping-list"
                     }}/>
+                    <Stack.Screen name="pages/group/index" options={{
+                        title: `Group`,
+                    }}/>
                 </Stack>
             </UserProvider>
         </PaperProvider>

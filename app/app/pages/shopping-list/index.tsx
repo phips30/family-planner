@@ -4,7 +4,7 @@ import {
     IconButton, MD3Colors
 } from 'react-native-paper';
 import React, {useContext, useEffect, useState} from 'react';
-import {router, Stack} from "expo-router";
+import {router} from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {InMemoryDb} from "@/app/in-memory-key-value-store";
 import {User, UserContext} from "@/app/user.provider";
@@ -94,11 +94,6 @@ export default function ShoppingList() {
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerRight: () => <Button onPress={() => openShareModal()}>Share</Button>,
-                }}
-            />
             <SafeAreaView
                 style={[
                     styles.container,
