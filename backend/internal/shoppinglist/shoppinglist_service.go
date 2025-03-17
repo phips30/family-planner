@@ -52,7 +52,7 @@ func (s *ShoppinglistService) validate(shoppinglistItems []ShoppinglistItem) err
 		if shoppinglistItem.Name == "" {
 			return errors.New("no name provided")
 		}
-		if shoppinglistItem.AddedBy == "" {
+		if shoppinglistItem.UserId == (uuid.UUID{}) {
 			return errors.New("no user provided")
 		}
 		if shoppinglistItem.AddedAt == (time.Time{}) {

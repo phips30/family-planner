@@ -14,6 +14,9 @@ type ShoppinglistItem struct {
 }
 
 func NewShoppinglistItem(name string, addedAt time.Time, userId uuid.UUID, bought bool) *ShoppinglistItem {
+	if addedAt == (time.Time{}) {
+		addedAt = time.Now()
+	}
 	return &ShoppinglistItem{
 		Name:    name,
 		AddedAt: addedAt,
