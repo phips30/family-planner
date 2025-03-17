@@ -20,10 +20,11 @@ type ShoppinglistRouter struct {
 }
 
 type ShoppinglistItemDto struct {
-	Name          string    `json:"name"`
-	AddedByUserId uuid.UUID `json:"addedByUserId"`
-	AddedAt       time.Time `json:"addedAt"`
-	Bought        bool      `json:"bought"`
+	Name    string    `json:"name"`
+	UserId  uuid.UUID `json:"userId"`
+	GroupId uuid.UUID `json:"groupId"`
+	AddedAt time.Time `json:"addedAt"`
+	Bought  bool      `json:"bought"`
 }
 
 func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, shoppinglistService *ShoppinglistService) *ShoppinglistRouter {
@@ -33,13 +34,14 @@ func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, sh
 		service:       shoppinglistService,
 	}
 
-	router.HandleFunc("/shopping-list/{userId}", shoppinglistRouter.findList).Methods("GET")
+	router.HandleFunc("/shopping-list/user/{userId}", shoppinglistRouter.findListForUser).Methods("GET")
+	router.HandleFunc("/shopping-list/group/{groupId}", shoppinglistRouter.findListForGroup).Methods("GET")
 	router.HandleFunc("/shopping-list", shoppinglistRouter.createList).Methods("POST")
 
 	return shoppinglistRouter
 }
 
-func (s *ShoppinglistRouter) findList(w http.ResponseWriter, r *http.Request) {
+func (s *ShoppinglistRouter) findListForUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userId, err := uuid.Parse(vars["userId"])
 	if err != nil {
@@ -47,18 +49,38 @@ func (s *ShoppinglistRouter) findList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No proper uuid provided", http.StatusBadRequest)
 	}
 
-	shoppingListItems, err := s.service.LoadShoppingListForUserid(userId)
+	shoppinglistItems, err := s.service.LoadShoppingListForUserId(userId)
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	var shoppinglistResponse []ShoppinglistItemDto
-	for _, shoppinlistItem := range shoppingListItems {
+	for _, shoppinlistItem := range shoppinglistItems {
 		shoppinglistResponse = append(shoppinglistResponse, *mapFromDomainObject(shoppinlistItem))
 	}
 
 	json.NewEncoder(w).Encode(shoppinglistResponse)
+}
 
+func (s *ShoppinglistRouter) findListForGroup(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupId, err := uuid.Parse(vars["groupId"])
+	if err != nil {
+		log.Println("No proper uuid provided: ", vars["groupId"])
+		http.Error(w, "No proper uuid provided", http.StatusBadRequest)
+	}
+
+	shoppinglistItems, err := s.service.LoadShoppingListForGroupId(groupId)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	var shoppinglistResponse []ShoppinglistItemDto
+	for _, shoppinlistItem := range shoppinglistItems {
+		shoppinglistResponse = append(shoppinglistResponse, *mapFromDomainObject(shoppinlistItem))
+	}
+
+	json.NewEncoder(w).Encode(shoppinglistResponse)
 }
 
 func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) {
@@ -73,26 +95,34 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 		shoppinglist = append(shoppinglist, *shoppinglistItemDto.mapToDomainObject())
 	}
 
-	_, err := s.service.SaveShoppingList(shoppinglist)
+	shoppinglistItems, err := s.service.SaveShoppingList(shoppinglist)
 	if err != nil {
 		log.Println("Error saving shopping list:", err.Error())
 	}
-	json.NewEncoder(w).Encode(shoppinglistRequest)
+	var shoppinglistResponse []ShoppinglistItemDto
+	for _, shoppinlistItem := range shoppinglistItems {
+		shoppinglistResponse = append(shoppinglistResponse, *mapFromDomainObject(shoppinlistItem))
+	}
+
+	json.NewEncoder(w).Encode(shoppinglistResponse)
 }
 
 func (itemdto *ShoppinglistItemDto) mapToDomainObject() *ShoppinglistItem {
 	return NewShoppinglistItem(
 		itemdto.Name,
 		itemdto.AddedAt,
-		itemdto.AddedByUserId,
+		itemdto.UserId,
+		itemdto.GroupId,
 		itemdto.Bought)
 }
 
 func mapFromDomainObject(shoppinglistItem ShoppinglistItem) *ShoppinglistItemDto {
+	//groupId := map[bool]int{true: valueIfTrue, false: valueIfFalse}[condition]
 	return &ShoppinglistItemDto{
-		Name:          shoppinglistItem.Name,
-		AddedByUserId: shoppinglistItem.UserId,
-		AddedAt:       shoppinglistItem.AddedAt,
-		Bought:        shoppinglistItem.Bought,
+		Name:    shoppinglistItem.Name,
+		UserId:  shoppinglistItem.UserId,
+		GroupId: shoppinglistItem.GroupId,
+		AddedAt: shoppinglistItem.AddedAt,
+		Bought:  shoppinglistItem.Bought,
 	}
 }

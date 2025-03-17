@@ -21,6 +21,7 @@ type shoppinglistMongoItem struct {
 	Name    string    `bson:"name"`
 	AddedAt time.Time `bson:"addedAt"`
 	UserId  string    `bson:"userId"`
+	GroupId string    `bson:"groupId"`
 	Bought  bool      `bson:"bought"`
 }
 
@@ -46,11 +47,9 @@ func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []ShoppinglistItem
 	return nil, fmt.Errorf("could not insert all documents into mongodb")
 }
 
-func (s *ShoppinglistRepositoryImpl) FindAllForUserIds(userIds []uuid.UUID) ([]ShoppinglistItem, error) {
-	var results []shoppinglistMongoItem
+func (s *ShoppinglistRepositoryImpl) FindAllForUserIds(userId uuid.UUID) ([]ShoppinglistItem, error) {
 	findOptions := options.Find()
-
-	filter := bson.M{"userId": bson.M{"$in": []string{userIds[0].String(), "881b4eb9-d847-4afa-8994-12c6b7307767"}}}
+	filter := bson.M{"userId": userId.String()}
 	cursor, err := s.mongoDbCollection.Find(s.ctx, filter, findOptions)
 
 	if err != nil {
@@ -59,6 +58,25 @@ func (s *ShoppinglistRepositoryImpl) FindAllForUserIds(userIds []uuid.UUID) ([]S
 	}
 	defer cursor.Close(s.ctx)
 
+	return s.extractCursorIntoDomainObject(cursor)
+}
+
+func (s *ShoppinglistRepositoryImpl) FindAllForGroupIds(groupId uuid.UUID) ([]ShoppinglistItem, error) {
+	findOptions := options.Find()
+	filter := bson.M{"groupId": groupId.String()}
+	cursor, err := s.mongoDbCollection.Find(s.ctx, filter, findOptions)
+
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	defer cursor.Close(s.ctx)
+
+	return s.extractCursorIntoDomainObject(cursor)
+}
+
+func (s *ShoppinglistRepositoryImpl) extractCursorIntoDomainObject(cursor *mongo.Cursor) ([]ShoppinglistItem, error) {
+	var shoppinglistItems []ShoppinglistItem
 	for cursor.Next(s.ctx) {
 		var item shoppinglistMongoItem
 		err := cursor.Decode(&item)
@@ -67,14 +85,14 @@ func (s *ShoppinglistRepositoryImpl) FindAllForUserIds(userIds []uuid.UUID) ([]S
 			log.Fatal(err)
 			return nil, err
 		}
-		results = append(results, item)
+		shoppinglistItems = append(shoppinglistItems, s.mapToDomainObject(item))
 	}
 
 	if err := cursor.Err(); err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
-	return s.mapToDomainObject(results), nil
+	return shoppinglistItems, nil
 }
 
 func (s *ShoppinglistRepositoryImpl) mapToMongoBsonObject(shoppinglistItems []ShoppinglistItem) []interface{} {
@@ -84,6 +102,7 @@ func (s *ShoppinglistRepositoryImpl) mapToMongoBsonObject(shoppinglistItems []Sh
 			Name:    item.Name,
 			AddedAt: item.AddedAt,
 			UserId:  item.UserId.String(),
+			GroupId: item.GroupId.String(),
 			Bought:  item.Bought,
 		}
 		shoppinglistItemMongoInterfaces = append(shoppinglistItemMongoInterfaces, shoppinglistMongoItem)
@@ -91,17 +110,14 @@ func (s *ShoppinglistRepositoryImpl) mapToMongoBsonObject(shoppinglistItems []Sh
 	return shoppinglistItemMongoInterfaces
 }
 
-func (s *ShoppinglistRepositoryImpl) mapToDomainObject(shoppinglistMongoItems []shoppinglistMongoItem) []ShoppinglistItem {
-	var shoppinglistItems []ShoppinglistItem
-	for _, item := range shoppinglistMongoItems {
-		userId, _ := uuid.Parse(item.UserId)
-		shoppinglistItem := ShoppinglistItem{
-			Name:    item.Name,
-			AddedAt: item.AddedAt,
-			UserId:  userId,
-			Bought:  item.Bought,
-		}
-		shoppinglistItems = append(shoppinglistItems, shoppinglistItem)
+func (s *ShoppinglistRepositoryImpl) mapToDomainObject(shoppinglistMongoItem shoppinglistMongoItem) ShoppinglistItem {
+	userId, _ := uuid.Parse(shoppinglistMongoItem.UserId)
+	groupId, _ := uuid.Parse(shoppinglistMongoItem.GroupId)
+	return ShoppinglistItem{
+		Name:    shoppinglistMongoItem.Name,
+		AddedAt: shoppinglistMongoItem.AddedAt,
+		UserId:  userId,
+		GroupId: groupId,
+		Bought:  shoppinglistMongoItem.Bought,
 	}
-	return shoppinglistItems
 }

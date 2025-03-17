@@ -3,38 +3,41 @@ package shoppinglist
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type ShoppinglistService struct {
-	repository     ShoppinglistRepository
-	familyDataPort FamilyDataPort
+	repository ShoppinglistRepository
 }
 
 var (
-	errRetrievingGroupData = errors.New("error getting group information for user")
+	errRetrievingUserData  = errors.New("error getting shopping list for user")
+	errRetrievingGroupData = errors.New("error getting shopping list for group")
 )
 
-func NewShoppinglistService(repository ShoppinglistRepository, familyDataPort FamilyDataPort) *ShoppinglistService {
-	return &ShoppinglistService{repository: repository, familyDataPort: familyDataPort}
+func NewShoppinglistService(repository ShoppinglistRepository) *ShoppinglistService {
+	return &ShoppinglistService{repository: repository}
 }
 
-func (s *ShoppinglistService) LoadShoppingListForUserid(userid uuid.UUID) ([]ShoppinglistItem, error) {
-	groupData, err := s.familyDataPort.GetGroupData(userid)
+func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]ShoppinglistItem, error) {
+	items, err := s.repository.FindAllForUserIds(userid)
 	if err != nil {
+		log.Println(err.Error())
+		return nil, errRetrievingUserData
+	}
+	return items, nil
+}
+
+func (s *ShoppinglistService) LoadShoppingListForGroupId(groupId uuid.UUID) ([]ShoppinglistItem, error) {
+	items, err := s.repository.FindAllForGroupIds(groupId)
+	if err != nil {
+		log.Println(err.Error())
 		return nil, errRetrievingGroupData
 	}
-	if groupData == nil {
-		return s.repository.FindAllForUserIds([]uuid.UUID{userid})
-	} else {
-		var userIds []uuid.UUID
-		for _, member := range groupData.Members {
-			userIds = append(userIds, member.UserId)
-		}
-		return s.repository.FindAllForUserIds(userIds)
-	}
+	return items, nil
 }
 
 func (s *ShoppinglistService) SaveShoppingList(shoppinglist []ShoppinglistItem) ([]ShoppinglistItem, error) {

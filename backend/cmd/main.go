@@ -57,8 +57,7 @@ func main() {
 	// Define Services
 	userService := service.NewUserService(userRepository)
 	groupService := service.NewGroupService(groupRepository, *userService)
-	var familyDataPort *shoppinglist.FamilyDataPortImpl
-	shoppinglistService := shoppinglist.NewShoppinglistService(shoppinglistRepository, familyDataPort)
+	shoppinglistService := shoppinglist.NewShoppinglistService(shoppinglistRepository)
 
 	// Define Routing
 	r := mux.NewRouter()

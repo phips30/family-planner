@@ -4,5 +4,6 @@ import "github.com/google/uuid"
 
 type ShoppinglistRepository interface {
 	Insert(shoppinglistItems []ShoppinglistItem) ([]ShoppinglistItem, error)
-	FindAllForUserIds(userIds []uuid.UUID) ([]ShoppinglistItem, error)
+	FindAllForUserIds(userId uuid.UUID) ([]ShoppinglistItem, error)
+	FindAllForGroupIds(groupId uuid.UUID) ([]ShoppinglistItem, error)
 }
