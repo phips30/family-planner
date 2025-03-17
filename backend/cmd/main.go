@@ -7,10 +7,12 @@ import (
 	"os"
 
 	"family-planner/backend/internal/db"
-	"family-planner/backend/internal/family/domain/service"
-	"family-planner/backend/internal/family/infrastructure/api"
+	familyService "family-planner/backend/internal/family/domain/service"
+	familyApi "family-planner/backend/internal/family/infrastructure/api"
 	"family-planner/backend/internal/family/infrastructure/postgres"
-	"family-planner/backend/internal/shoppinglist"
+	shoppinglistService "family-planner/backend/internal/shoppinglist/domain/service"
+	shoppinglistApi "family-planner/backend/internal/shoppinglist/infrastructure/api"
+	"family-planner/backend/internal/shoppinglist/infrastructure/mongo"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -52,12 +54,17 @@ func main() {
 	// Define Repositories
 	userRepository := postgres.NewUserRepositoryImpl(ctx, dbpool)
 	groupRepository := postgres.NewGroupRepositoryImpl(ctx, dbpool, userRepository)
-	shoppinglistRepository := shoppinglist.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
+	shoppinglistSaveRepo := mongo.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
+	shoppinglistQueryUserRepo := mongo.NewShoppinglistQueryUserRepositoryImpl(ctx, mongoDbClient)
+	shoppinglistQueryGroupRepo := mongo.NewShoppinglistQueryGroupRepoImpl(ctx, mongoDbClient)
 
 	// Define Services
-	userService := service.NewUserService(userRepository)
-	groupService := service.NewGroupService(groupRepository, *userService)
-	shoppinglistService := shoppinglist.NewShoppinglistService(shoppinglistRepository)
+	userService := familyService.NewUserService(userRepository)
+	groupService := familyService.NewGroupService(groupRepository, *userService)
+	shoppinglistService := shoppinglistService.NewShoppinglistService(
+		shoppinglistSaveRepo,
+		shoppinglistQueryUserRepo,
+		shoppinglistQueryGroupRepo)
 
 	// Define Routing
 	r := mux.NewRouter()
@@ -65,9 +72,9 @@ func main() {
 	methods := handlers.AllowedMethods([]string{"GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"})
 	origins := handlers.AllowedOrigins([]string{"*"})
 
-	api.NewUserRouter(r, *userService)
-	api.NewGroupRouter(r, *groupService)
-	shoppinglist.NewShoppinglistRouter(r, mongoDbClient, shoppinglistService)
+	familyApi.NewUserRouter(r, *userService)
+	familyApi.NewGroupRouter(r, *groupService)
+	shoppinglistApi.NewShoppinglistRouter(r, mongoDbClient, shoppinglistService)
 
 	log.Printf("Starting server on port %s", PORT)
 	err = http.ListenAndServe(":"+PORT, handlers.CORS(headers, methods, origins)(r))

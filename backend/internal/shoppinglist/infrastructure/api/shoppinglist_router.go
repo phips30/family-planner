@@ -1,7 +1,10 @@
-package shoppinglist
+package api
 
 import (
 	"encoding/json"
+	"family-planner/backend/internal/shoppinglist/domain/entity"
+	"family-planner/backend/internal/shoppinglist/domain/service"
+
 	// Todo: this dependency needs to be removed
 
 	"log"
@@ -16,7 +19,7 @@ import (
 type ShoppinglistRouter struct {
 	router        *mux.Router
 	mongoDbClient *mongo.Database
-	service       *ShoppinglistService
+	service       *service.ShoppinglistService
 }
 
 type ShoppinglistItemDto struct {
@@ -27,7 +30,7 @@ type ShoppinglistItemDto struct {
 	Bought  bool      `json:"bought"`
 }
 
-func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, shoppinglistService *ShoppinglistService) *ShoppinglistRouter {
+func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, shoppinglistService *service.ShoppinglistService) *ShoppinglistRouter {
 	shoppinglistRouter := &ShoppinglistRouter{
 		router:        router,
 		mongoDbClient: mongoDbClient,
@@ -90,7 +93,7 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "error parsing request", http.StatusBadRequest)
 	}
 
-	var shoppinglist []ShoppinglistItem
+	var shoppinglist []entity.ShoppinglistItem
 	for _, shoppinglistItemDto := range shoppinglistRequest {
 		shoppinglist = append(shoppinglist, *shoppinglistItemDto.mapToDomainObject())
 	}
@@ -107,8 +110,8 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(shoppinglistResponse)
 }
 
-func (itemdto *ShoppinglistItemDto) mapToDomainObject() *ShoppinglistItem {
-	return NewShoppinglistItem(
+func (itemdto *ShoppinglistItemDto) mapToDomainObject() *entity.ShoppinglistItem {
+	return entity.NewShoppinglistItem(
 		itemdto.Name,
 		itemdto.AddedAt,
 		itemdto.UserId,
@@ -116,7 +119,7 @@ func (itemdto *ShoppinglistItemDto) mapToDomainObject() *ShoppinglistItem {
 		itemdto.Bought)
 }
 
-func mapFromDomainObject(shoppinglistItem ShoppinglistItem) *ShoppinglistItemDto {
+func mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *ShoppinglistItemDto {
 	//groupId := map[bool]int{true: valueIfTrue, false: valueIfFalse}[condition]
 	return &ShoppinglistItemDto{
 		Name:    shoppinglistItem.Name,
