@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"family-planner/backend/internal/shoppinglist/domain/service"
-
-	// Todo: this dependency needs to be removed
+	"family-planner/backend/internal/shoppinglist/infrastructure/api/dto"
 
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -20,14 +18,6 @@ type ShoppinglistRouter struct {
 	router        *mux.Router
 	mongoDbClient *mongo.Database
 	service       *service.ShoppinglistService
-}
-
-type ShoppinglistItemDto struct {
-	Name    string    `json:"name"`
-	UserId  uuid.UUID `json:"userId"`
-	GroupId uuid.UUID `json:"groupId"`
-	AddedAt time.Time `json:"addedAt"`
-	Bought  bool      `json:"bought"`
 }
 
 func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, shoppinglistService *service.ShoppinglistService) *ShoppinglistRouter {
@@ -57,9 +47,10 @@ func (s *ShoppinglistRouter) findListForUser(w http.ResponseWriter, r *http.Requ
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	var shoppinglistResponse []ShoppinglistItemDto
+	var shoppinglistResponse []dto.ShoppinglistUserItemDto
 	for _, shoppinlistItem := range shoppinglistItems {
-		shoppinglistResponse = append(shoppinglistResponse, *mapFromDomainObject(shoppinlistItem))
+		var shoppinglistUserItemDto dto.ShoppinglistUserItemDto
+		shoppinglistResponse = append(shoppinglistResponse, *shoppinglistUserItemDto.MapFromDomainObject(shoppinlistItem))
 	}
 
 	json.NewEncoder(w).Encode(shoppinglistResponse)
@@ -78,16 +69,17 @@ func (s *ShoppinglistRouter) findListForGroup(w http.ResponseWriter, r *http.Req
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	var shoppinglistResponse []ShoppinglistItemDto
+	var shoppinglistResponse []dto.ShoppinglistGroupItemDto
 	for _, shoppinlistItem := range shoppinglistItems {
-		shoppinglistResponse = append(shoppinglistResponse, *mapFromDomainObject(shoppinlistItem))
+		var shoppinglistGroupItemDto dto.ShoppinglistGroupItemDto
+		shoppinglistResponse = append(shoppinglistResponse, *shoppinglistGroupItemDto.MapFromDomainObject(shoppinlistItem))
 	}
 
 	json.NewEncoder(w).Encode(shoppinglistResponse)
 }
 
 func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) {
-	var shoppinglistRequest []ShoppinglistItemDto
+	var shoppinglistRequest []dto.ShoppinglistGroupItemDto
 	if err := json.NewDecoder(r.Body).Decode(&shoppinglistRequest); err != nil {
 		log.Println("error parsing request")
 		http.Error(w, "error parsing request", http.StatusBadRequest)
@@ -95,37 +87,12 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 
 	var shoppinglist []entity.ShoppinglistItem
 	for _, shoppinglistItemDto := range shoppinglistRequest {
-		shoppinglist = append(shoppinglist, *shoppinglistItemDto.mapToDomainObject())
+		shoppinglist = append(shoppinglist, *shoppinglistItemDto.MapToDomainObject())
 	}
 
-	shoppinglistItems, err := s.service.SaveShoppingList(shoppinglist)
+	_, err := s.service.SaveShoppingList(shoppinglist)
 	if err != nil {
 		log.Println("Error saving shopping list:", err.Error())
 	}
-	var shoppinglistResponse []ShoppinglistItemDto
-	for _, shoppinlistItem := range shoppinglistItems {
-		shoppinglistResponse = append(shoppinglistResponse, *mapFromDomainObject(shoppinlistItem))
-	}
-
-	json.NewEncoder(w).Encode(shoppinglistResponse)
-}
-
-func (itemdto *ShoppinglistItemDto) mapToDomainObject() *entity.ShoppinglistItem {
-	return entity.NewShoppinglistItem(
-		itemdto.Name,
-		itemdto.AddedAt,
-		itemdto.UserId,
-		itemdto.GroupId,
-		itemdto.Bought)
-}
-
-func mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *ShoppinglistItemDto {
-	//groupId := map[bool]int{true: valueIfTrue, false: valueIfFalse}[condition]
-	return &ShoppinglistItemDto{
-		Name:    shoppinglistItem.Name,
-		UserId:  shoppinglistItem.UserId,
-		GroupId: shoppinglistItem.GroupId,
-		AddedAt: shoppinglistItem.AddedAt,
-		Bought:  shoppinglistItem.Bought,
-	}
+	w.WriteHeader(http.StatusOK)
 }

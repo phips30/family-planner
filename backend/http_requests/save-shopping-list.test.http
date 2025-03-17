@@ -1,0 +1,19 @@
+POST http://localhost:8080/shopping-list HTTP/1.1
+content-type: application/json
+
+[{
+    "name": "eggs",
+    "userId": "4a1f2ee5-0558-4987-a84c-0e853f24a0fc",
+    "bought": false
+},
+{
+    "name": "gurke",
+    "userId": "4a1f2ee5-0558-4987-a84c-0e853f24a0fc",
+    "bought": true
+},
+{
+    "name": "pizzateig",
+    "userId": "881b4eb9-d847-4afa-8994-12c6b7307767",
+    "groupId": "52a40ea0-3cf8-4400-aa68-aaf3202a7e6e",
+    "bought": true
+}]

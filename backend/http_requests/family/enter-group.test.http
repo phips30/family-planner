@@ -1,0 +1,7 @@
+POST http://localhost:8080/group/member HTTP/1.1
+content-type: application/json
+
+{
+    "groupId": "52a40ea0-3cf8-4400-aa68-aaf3202a7e6e",
+    "email": "marija@mail.com"
+}
