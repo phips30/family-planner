@@ -54,6 +54,7 @@ func main() {
 	// Define Repositories
 	userRepository := postgres.NewUserRepositoryImpl(ctx, dbpool)
 	groupRepository := postgres.NewGroupRepositoryImpl(ctx, dbpool, userRepository)
+	userDataAdapter := postgres.NewUserDataAdapter(ctx, dbpool)
 	shoppinglistSaveRepo := mongo.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
 	shoppinglistQueryUserRepo := mongo.NewShoppinglistQueryUserRepositoryImpl(ctx, mongoDbClient)
 	shoppinglistQueryGroupRepo := mongo.NewShoppinglistQueryGroupRepoImpl(ctx, mongoDbClient)
@@ -64,7 +65,9 @@ func main() {
 	shoppinglistService := shoppinglistService.NewShoppinglistService(
 		shoppinglistSaveRepo,
 		shoppinglistQueryUserRepo,
-		shoppinglistQueryGroupRepo)
+		shoppinglistQueryGroupRepo,
+		userDataAdapter,
+	)
 
 	// Define Routing
 	r := mux.NewRouter()

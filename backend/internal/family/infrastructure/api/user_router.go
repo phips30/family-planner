@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -15,8 +16,9 @@ type UserRouter struct {
 }
 
 type UserDto struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Id    uuid.UUID `json:"id"`
+	Name  string    `json:"name"`
+	Email string    `json:"email"`
 }
 
 func NewUserRouter(router *mux.Router, service service.UserService) *UserRouter {
@@ -42,7 +44,7 @@ func (u *UserRouter) findUser(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("User not found %s", user)
 		http.Error(w, "User not found", http.StatusBadRequest)
 	} else {
-		json.NewEncoder(w).Encode(UserDto{Name: user.Name, Email: user.Email})
+		json.NewEncoder(w).Encode(UserDto{Id: user.Id, Name: user.Name, Email: user.Email})
 	}
 }
 

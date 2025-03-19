@@ -1,11 +1,11 @@
 package repository
 
 import (
-	"family-planner/backend/internal/shoppinglist/domain/entity"
+	"family-planner/backend/internal/shoppinglist/common/dto"
 
 	"github.com/google/uuid"
 )
 
 type ShoppinglistQueryRepository interface {
-	FindAll(id uuid.UUID) ([]entity.ShoppinglistItem, error)
+	FindAll(id uuid.UUID) ([]dto.ShoppinglistGroupItemDto, error)
 }

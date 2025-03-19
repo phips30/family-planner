@@ -2,9 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"family-planner/backend/internal/shoppinglist/common/dto"
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"family-planner/backend/internal/shoppinglist/domain/service"
-	"family-planner/backend/internal/shoppinglist/infrastructure/api/dto"
 
 	"log"
 	"net/http"
@@ -47,10 +47,9 @@ func (s *ShoppinglistRouter) findListForUser(w http.ResponseWriter, r *http.Requ
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	var shoppinglistResponse []dto.ShoppinglistUserItemDto
+	var shoppinglistResponse []dto.ShoppinglistItemResponse
 	for _, shoppinlistItem := range shoppinglistItems {
-		var shoppinglistUserItemDto dto.ShoppinglistUserItemDto
-		shoppinglistResponse = append(shoppinglistResponse, *shoppinglistUserItemDto.MapFromDomainObject(shoppinlistItem))
+		shoppinglistResponse = append(shoppinglistResponse, *s.mapFromDomainObject(shoppinlistItem))
 	}
 
 	json.NewEncoder(w).Encode(shoppinglistResponse)
@@ -69,10 +68,9 @@ func (s *ShoppinglistRouter) findListForGroup(w http.ResponseWriter, r *http.Req
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	var shoppinglistResponse []dto.ShoppinglistGroupItemDto
+	var shoppinglistResponse []dto.ShoppinglistItemResponse
 	for _, shoppinlistItem := range shoppinglistItems {
-		var shoppinglistGroupItemDto dto.ShoppinglistGroupItemDto
-		shoppinglistResponse = append(shoppinglistResponse, *shoppinglistGroupItemDto.MapFromDomainObject(shoppinlistItem))
+		shoppinglistResponse = append(shoppinglistResponse, *s.mapFromDomainObject(shoppinlistItem))
 	}
 
 	json.NewEncoder(w).Encode(shoppinglistResponse)
@@ -85,14 +83,18 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "error parsing request", http.StatusBadRequest)
 	}
 
-	var shoppinglist []entity.ShoppinglistItem
-	for _, shoppinglistItemDto := range shoppinglistRequest {
-		shoppinglist = append(shoppinglist, *shoppinglistItemDto.MapToDomainObject())
-	}
-
-	_, err := s.service.SaveShoppingList(shoppinglist)
+	_, err := s.service.SaveShoppingList(shoppinglistRequest)
 	if err != nil {
 		log.Println("Error saving shopping list:", err.Error())
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *dto.ShoppinglistItemResponse {
+	return &dto.ShoppinglistItemResponse{
+		Name:    shoppinglistItem.Name,
+		User:    dto.ShoppingtItemCreator{Id: shoppinglistItem.User.Id, Name: shoppinglistItem.User.Name},
+		AddedAt: shoppinglistItem.AddedAt,
+		Bought:  shoppinglistItem.Bought,
+	}
 }

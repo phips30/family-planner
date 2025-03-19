@@ -2,9 +2,8 @@ package mongo
 
 import (
 	"context"
-	"family-planner/backend/internal/shoppinglist/domain/entity"
+	"family-planner/backend/internal/shoppinglist/common/dto"
 	"fmt"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -14,21 +13,12 @@ type ShoppinglistRepositoryImpl struct {
 	mongoDbCollection *mongo.Collection
 }
 
-type shoppinglistMongoItem struct {
-	Name    string    `bson:"name"`
-	AddedAt time.Time `bson:"addedAt"`
-	UserId  string    `bson:"userId"`
-	GroupId string    `bson:"groupId"`
-	Bought  bool      `bson:"bought"`
-}
-
 func NewShoppinglistRepositoryImpl(ctx context.Context, mongoDbClient *mongo.Database) *ShoppinglistRepositoryImpl {
 	return &ShoppinglistRepositoryImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
-func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.ShoppinglistItem) ([]entity.ShoppinglistItem, error) {
-	mongoShoppingListitems := MapToMongoBsonObject(shoppinglistItems)
-
+func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []dto.ShoppinglistGroupItemDto) ([]dto.ShoppinglistGroupItemDto, error) {
+	mongoShoppingListitems := s.mapToMongoBsonObject(shoppinglistItems)
 	result, err := s.mongoDbCollection.InsertMany(s.ctx, mongoShoppingListitems)
 
 	if err != nil {
@@ -40,4 +30,12 @@ func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.Shoppingl
 	}
 
 	return nil, fmt.Errorf("could not insert all documents into mongodb")
+}
+
+func (s *ShoppinglistRepositoryImpl) mapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistGroupItemDto) []interface{} {
+	var shoppinglistItemMongoInterfaces []interface{}
+	for _, item := range shoppinglistItems {
+		shoppinglistItemMongoInterfaces = append(shoppinglistItemMongoInterfaces, item)
+	}
+	return shoppinglistItemMongoInterfaces
 }

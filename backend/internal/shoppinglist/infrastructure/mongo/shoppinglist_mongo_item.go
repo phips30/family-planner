@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"context"
-	"family-planner/backend/internal/shoppinglist/domain/entity"
+	"family-planner/backend/internal/shoppinglist/common/dto"
 	"log"
 	"time"
 
@@ -18,10 +18,10 @@ type ShoppinglistMongoItem struct {
 	Bought  bool      `bson:"bought"`
 }
 
-func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([]entity.ShoppinglistItem, error) {
-	var shoppinglistItems []entity.ShoppinglistItem
+func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([]dto.ShoppinglistGroupItemDto, error) {
+	var shoppinglistItems []dto.ShoppinglistGroupItemDto
 	for cursor.Next(ctx) {
-		var item shoppinglistMongoItem
+		var item ShoppinglistMongoItem
 		err := cursor.Decode(&item)
 
 		if err != nil {
@@ -38,10 +38,10 @@ func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([
 	return shoppinglistItems, nil
 }
 
-func MapToMongoBsonObject(shoppinglistItems []entity.ShoppinglistItem) []interface{} {
+func MapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistGroupItemDto) []interface{} {
 	var shoppinglistItemMongoInterfaces []interface{}
 	for _, item := range shoppinglistItems {
-		shoppinglistMongoItem := shoppinglistMongoItem{
+		shoppinglistMongoItem := ShoppinglistMongoItem{
 			Name:    item.Name,
 			AddedAt: item.AddedAt,
 			UserId:  item.UserId.String(),
@@ -53,10 +53,10 @@ func MapToMongoBsonObject(shoppinglistItems []entity.ShoppinglistItem) []interfa
 	return shoppinglistItemMongoInterfaces
 }
 
-func MapToDomainObject(shoppinglistMongoItem shoppinglistMongoItem) entity.ShoppinglistItem {
+func MapToDomainObject(shoppinglistMongoItem ShoppinglistMongoItem) dto.ShoppinglistGroupItemDto {
 	userId, _ := uuid.Parse(shoppinglistMongoItem.UserId)
 	groupId, _ := uuid.Parse(shoppinglistMongoItem.GroupId)
-	return entity.ShoppinglistItem{
+	return dto.ShoppinglistGroupItemDto{
 		Name:    shoppinglistMongoItem.Name,
 		AddedAt: shoppinglistMongoItem.AddedAt,
 		UserId:  userId,
