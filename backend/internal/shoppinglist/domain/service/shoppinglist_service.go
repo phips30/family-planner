@@ -61,7 +61,7 @@ func (s *ShoppinglistService) LoadShoppingListForGroupId(groupId uuid.UUID) ([]e
 	return *entity.FromExistingItems(items, itemCreators), nil
 }
 
-func (s *ShoppinglistService) getUniqueUserIds(items []dto.ShoppinglistGroupItemDto) []uuid.UUID {
+func (s *ShoppinglistService) getUniqueUserIds(items []dto.ShoppinglistItemRequestDto) []uuid.UUID {
 	var userIds []uuid.UUID
 	for _, item := range items {
 		userIds = append(userIds, item.UserId)
@@ -78,7 +78,7 @@ func (s *ShoppinglistService) getUniqueUserIds(items []dto.ShoppinglistGroupItem
 	return userIds
 }
 
-func (s *ShoppinglistService) SaveShoppingList(shoppinglist []dto.ShoppinglistGroupItemDto) ([]dto.ShoppinglistGroupItemDto, error) {
+func (s *ShoppinglistService) SaveShoppingList(shoppinglist []dto.ShoppinglistItemRequestDto) ([]dto.ShoppinglistItemRequestDto, error) {
 	validation_error := s.validate(shoppinglist)
 	// TODO: Just aggregate the errors and log them instead of not continuing
 	if validation_error != nil {
@@ -87,7 +87,7 @@ func (s *ShoppinglistService) SaveShoppingList(shoppinglist []dto.ShoppinglistGr
 	return s.saveRepository.Insert(shoppinglist)
 }
 
-func (s *ShoppinglistService) validate(shoppinglistItems []dto.ShoppinglistGroupItemDto) error {
+func (s *ShoppinglistService) validate(shoppinglistItems []dto.ShoppinglistItemRequestDto) error {
 	// TODO: Check if item does not already exist for the group for a shopping trip
 	for _, shoppinglistItem := range shoppinglistItems {
 		if shoppinglistItem.Name == "" {

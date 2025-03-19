@@ -7,5 +7,5 @@ import (
 )
 
 type ShoppinglistQueryRepository interface {
-	FindAll(id uuid.UUID) ([]dto.ShoppinglistGroupItemDto, error)
+	FindAll(id uuid.UUID) ([]dto.ShoppinglistItemRequestDto, error)
 }

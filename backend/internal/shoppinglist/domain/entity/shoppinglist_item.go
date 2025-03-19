@@ -34,7 +34,7 @@ func NewShoppinglistItem(name string, addedAt time.Time, user ShoppinglistItemCr
 	}
 }
 
-func FromExistingItems(items []dto.ShoppinglistGroupItemDto, userData []ShoppinglistItemCreator) *[]ShoppinglistItem {
+func FromExistingItems(items []dto.ShoppinglistItemRequestDto, userData []ShoppinglistItemCreator) *[]ShoppinglistItem {
 	var shoppinglistItems []ShoppinglistItem
 	for _, item := range items {
 		var itemCreator ShoppinglistItemCreator

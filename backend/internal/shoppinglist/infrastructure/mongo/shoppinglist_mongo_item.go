@@ -18,8 +18,8 @@ type ShoppinglistMongoItem struct {
 	Bought  bool      `bson:"bought"`
 }
 
-func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([]dto.ShoppinglistGroupItemDto, error) {
-	var shoppinglistItems []dto.ShoppinglistGroupItemDto
+func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([]dto.ShoppinglistItemRequestDto, error) {
+	var shoppinglistItems []dto.ShoppinglistItemRequestDto
 	for cursor.Next(ctx) {
 		var item ShoppinglistMongoItem
 		err := cursor.Decode(&item)
@@ -38,7 +38,7 @@ func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([
 	return shoppinglistItems, nil
 }
 
-func MapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistGroupItemDto) []interface{} {
+func MapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistItemRequestDto) []interface{} {
 	var shoppinglistItemMongoInterfaces []interface{}
 	for _, item := range shoppinglistItems {
 		shoppinglistMongoItem := ShoppinglistMongoItem{
@@ -53,10 +53,10 @@ func MapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistGroupItemDto) []in
 	return shoppinglistItemMongoInterfaces
 }
 
-func MapToDomainObject(shoppinglistMongoItem ShoppinglistMongoItem) dto.ShoppinglistGroupItemDto {
+func MapToDomainObject(shoppinglistMongoItem ShoppinglistMongoItem) dto.ShoppinglistItemRequestDto {
 	userId, _ := uuid.Parse(shoppinglistMongoItem.UserId)
 	groupId, _ := uuid.Parse(shoppinglistMongoItem.GroupId)
-	return dto.ShoppinglistGroupItemDto{
+	return dto.ShoppinglistItemRequestDto{
 		Name:    shoppinglistMongoItem.Name,
 		AddedAt: shoppinglistMongoItem.AddedAt,
 		UserId:  userId,

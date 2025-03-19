@@ -11,7 +11,7 @@ type ShoppingtItemCreator struct {
 	Name string    `json:"name"`
 }
 
-type ShoppinglistItemResponse struct {
+type ShoppinglistItemResponseDto struct {
 	Name    string               `json:"name"`
 	User    ShoppingtItemCreator `json:"user"`
 	AddedAt time.Time            `json:"addedAt"`

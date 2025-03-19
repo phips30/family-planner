@@ -5,5 +5,5 @@ import (
 )
 
 type ShoppinglistSaveRepository interface {
-	Insert(shoppinglistItems []dto.ShoppinglistGroupItemDto) ([]dto.ShoppinglistGroupItemDto, error)
+	Insert(shoppinglistItems []dto.ShoppinglistItemRequestDto) ([]dto.ShoppinglistItemRequestDto, error)
 }

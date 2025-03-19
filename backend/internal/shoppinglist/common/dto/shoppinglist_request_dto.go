@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type ShoppinglistGroupItemDto struct {
+type ShoppinglistItemRequestDto struct {
 	Name    string    `json:"name"`
 	UserId  uuid.UUID `json:"userId"`
 	GroupId uuid.UUID `json:"groupId"`

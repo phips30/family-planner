@@ -47,7 +47,7 @@ func (s *ShoppinglistRouter) findListForUser(w http.ResponseWriter, r *http.Requ
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	var shoppinglistResponse []dto.ShoppinglistItemResponse
+	var shoppinglistResponse []dto.ShoppinglistItemResponseDto
 	for _, shoppinlistItem := range shoppinglistItems {
 		shoppinglistResponse = append(shoppinglistResponse, *s.mapFromDomainObject(shoppinlistItem))
 	}
@@ -68,7 +68,7 @@ func (s *ShoppinglistRouter) findListForGroup(w http.ResponseWriter, r *http.Req
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	var shoppinglistResponse []dto.ShoppinglistItemResponse
+	var shoppinglistResponse []dto.ShoppinglistItemResponseDto
 	for _, shoppinlistItem := range shoppinglistItems {
 		shoppinglistResponse = append(shoppinglistResponse, *s.mapFromDomainObject(shoppinlistItem))
 	}
@@ -77,7 +77,7 @@ func (s *ShoppinglistRouter) findListForGroup(w http.ResponseWriter, r *http.Req
 }
 
 func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) {
-	var shoppinglistRequest []dto.ShoppinglistGroupItemDto
+	var shoppinglistRequest []dto.ShoppinglistItemRequestDto
 	if err := json.NewDecoder(r.Body).Decode(&shoppinglistRequest); err != nil {
 		log.Println("error parsing request")
 		http.Error(w, "error parsing request", http.StatusBadRequest)
@@ -90,8 +90,8 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *dto.ShoppinglistItemResponse {
-	return &dto.ShoppinglistItemResponse{
+func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *dto.ShoppinglistItemResponseDto {
+	return &dto.ShoppinglistItemResponseDto{
 		Name:    shoppinglistItem.Name,
 		User:    dto.ShoppingtItemCreator{Id: shoppinglistItem.User.Id, Name: shoppinglistItem.User.Name},
 		AddedAt: shoppinglistItem.AddedAt,

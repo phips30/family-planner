@@ -17,7 +17,7 @@ func NewShoppinglistRepositoryImpl(ctx context.Context, mongoDbClient *mongo.Dat
 	return &ShoppinglistRepositoryImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
-func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []dto.ShoppinglistGroupItemDto) ([]dto.ShoppinglistGroupItemDto, error) {
+func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []dto.ShoppinglistItemRequestDto) ([]dto.ShoppinglistItemRequestDto, error) {
 	mongoShoppingListitems := s.mapToMongoBsonObject(shoppinglistItems)
 	result, err := s.mongoDbCollection.InsertMany(s.ctx, mongoShoppingListitems)
 
@@ -32,7 +32,7 @@ func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []dto.Shoppinglist
 	return nil, fmt.Errorf("could not insert all documents into mongodb")
 }
 
-func (s *ShoppinglistRepositoryImpl) mapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistGroupItemDto) []interface{} {
+func (s *ShoppinglistRepositoryImpl) mapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistItemRequestDto) []interface{} {
 	var shoppinglistItemMongoInterfaces []interface{}
 	for _, item := range shoppinglistItems {
 		shoppinglistItemMongoInterfaces = append(shoppinglistItemMongoInterfaces, item)

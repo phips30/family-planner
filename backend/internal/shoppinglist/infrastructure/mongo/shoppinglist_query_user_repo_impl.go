@@ -20,7 +20,7 @@ func NewShoppinglistQueryUserRepositoryImpl(ctx context.Context, mongoDbClient *
 	return &ShoppingListQueryUserRepoImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
-func (s *ShoppingListQueryUserRepoImpl) FindAll(userId uuid.UUID) ([]dto.ShoppinglistGroupItemDto, error) {
+func (s *ShoppingListQueryUserRepoImpl) FindAll(userId uuid.UUID) ([]dto.ShoppinglistItemRequestDto, error) {
 	findOptions := options.Find()
 	filter := bson.M{"userId": userId.String()}
 	cursor, err := s.mongoDbCollection.Find(s.ctx, filter, findOptions)
