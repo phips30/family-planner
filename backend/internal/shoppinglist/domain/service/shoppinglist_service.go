@@ -6,7 +6,6 @@ import (
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"family-planner/backend/internal/shoppinglist/domain/port"
 	"family-planner/backend/internal/shoppinglist/domain/repository"
-	"fmt"
 	"log"
 	"time"
 
@@ -23,6 +22,7 @@ type ShoppinglistService struct {
 var (
 	errRetrievingListForUser  = errors.New("error getting shopping list for user")
 	errRetrievingListForGroup = errors.New("error getting shopping list for group")
+	errGettingUserData        = errors.New("error loading user data for shopping list items")
 )
 
 func NewShoppinglistService(saveRepository repository.ShoppinglistSaveRepository,
@@ -78,13 +78,26 @@ func (s *ShoppinglistService) getUniqueUserIds(items []dto.ShoppinglistItemReque
 	return userIds
 }
 
-func (s *ShoppinglistService) SaveShoppingList(shoppinglist []dto.ShoppinglistItemRequestDto) ([]dto.ShoppinglistItemRequestDto, error) {
-	validation_error := s.validate(shoppinglist)
-	// TODO: Just aggregate the errors and log them instead of not continuing
-	if validation_error != nil {
-		return nil, fmt.Errorf("%s", validation_error.Error())
+func (s *ShoppinglistService) SaveShoppingList(shoppinglist []dto.ShoppinglistItemRequestDto) ([]entity.ShoppinglistItem, error) {
+	userIds := s.getUniqueUserIds(shoppinglist)
+	itemCreators, err := s.userDataPort.GetUserData(userIds)
+	if err != nil {
+		return nil, errGettingUserData
 	}
-	return s.saveRepository.Insert(shoppinglist)
+
+	items := entity.NewShoppinglistItems(shoppinglist, itemCreators)
+
+	return s.saveRepository.Insert(*items)
+	/*
+	   validation_error := s.validate(shoppinglist)
+	   // TODO: Just aggregate the errors and log them instead of not continuing
+
+	   	if validation_error != nil {
+	   		return nil, fmt.Errorf("%s", validation_error.Error())
+	   	}
+
+	   return s.saveRepository.Insert(shoppinglist)
+	*/
 }
 
 func (s *ShoppinglistService) validate(shoppinglistItems []dto.ShoppinglistItemRequestDto) error {
@@ -96,9 +109,7 @@ func (s *ShoppinglistService) validate(shoppinglistItems []dto.ShoppinglistItemR
 		if shoppinglistItem.UserId == (uuid.UUID{}) {
 			return errors.New("no user provided")
 		}
-		if shoppinglistItem.AddedAt == (time.Time{}) {
-			shoppinglistItem.AddedAt = time.Now()
-		}
+		shoppinglistItem.AddedAt = time.Now()
 	}
 	return nil
 }

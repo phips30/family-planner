@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"family-planner/backend/internal/shoppinglist/common/dto"
+	"family-planner/backend/internal/shoppinglist/domain/entity"
 )
 
 type ShoppinglistSaveRepository interface {
-	Insert(shoppinglistItems []dto.ShoppinglistItemRequestDto) ([]dto.ShoppinglistItemRequestDto, error)
+	Insert(shoppinglistItems []entity.ShoppinglistItem) ([]entity.ShoppinglistItem, error)
 }

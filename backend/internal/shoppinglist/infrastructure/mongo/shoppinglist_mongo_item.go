@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"family-planner/backend/internal/shoppinglist/common/dto"
+	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"log"
 	"time"
 
@@ -38,13 +39,13 @@ func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([
 	return shoppinglistItems, nil
 }
 
-func MapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistItemRequestDto) []interface{} {
+func MapToMongoBsonObject(shoppinglistItems []entity.ShoppinglistItem) []interface{} {
 	var shoppinglistItemMongoInterfaces []interface{}
 	for _, item := range shoppinglistItems {
 		shoppinglistMongoItem := ShoppinglistMongoItem{
 			Name:    item.Name,
 			AddedAt: item.AddedAt,
-			UserId:  item.UserId.String(),
+			UserId:  item.User.Id.String(),
 			GroupId: item.GroupId.String(),
 			Bought:  item.Bought,
 		}

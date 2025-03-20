@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"context"
-	"family-planner/backend/internal/shoppinglist/common/dto"
+	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,8 +17,8 @@ func NewShoppinglistRepositoryImpl(ctx context.Context, mongoDbClient *mongo.Dat
 	return &ShoppinglistRepositoryImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
-func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []dto.ShoppinglistItemRequestDto) ([]dto.ShoppinglistItemRequestDto, error) {
-	mongoShoppingListitems := s.mapToMongoBsonObject(shoppinglistItems)
+func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.ShoppinglistItem) ([]entity.ShoppinglistItem, error) {
+	mongoShoppingListitems := MapToMongoBsonObject(shoppinglistItems)
 	result, err := s.mongoDbCollection.InsertMany(s.ctx, mongoShoppingListitems)
 
 	if err != nil {
@@ -30,12 +30,4 @@ func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []dto.Shoppinglist
 	}
 
 	return nil, fmt.Errorf("could not insert all documents into mongodb")
-}
-
-func (s *ShoppinglistRepositoryImpl) mapToMongoBsonObject(shoppinglistItems []dto.ShoppinglistItemRequestDto) []interface{} {
-	var shoppinglistItemMongoInterfaces []interface{}
-	for _, item := range shoppinglistItems {
-		shoppinglistItemMongoInterfaces = append(shoppinglistItemMongoInterfaces, item)
-	}
-	return shoppinglistItemMongoInterfaces
 }
