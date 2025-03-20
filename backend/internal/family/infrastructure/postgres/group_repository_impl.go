@@ -29,10 +29,6 @@ func NewGroupRepositoryImpl(ctx context.Context, dbpool *pgxpool.Pool, userRepos
 
 func (g *GroupRepositoryImpl) Save(group *entity.Group) (*entity.Group, error) {
 	query := `INSERT INTO public.group (id, name, created_by, created_at) VALUES (@id, @name, @createdBy, @createdAt)`
-	fmt.Println(group.Id)
-	fmt.Println(group.Name)
-	fmt.Println(group.CreatedBy.Id)
-	fmt.Println(group.CreatedAt)
 	args := pgx.NamedArgs{
 		"id":        &group.Id,
 		"name":      group.Name,

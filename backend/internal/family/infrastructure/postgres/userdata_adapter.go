@@ -37,7 +37,6 @@ func (u *UserDataAdapter) GetUserData(userIDs []uuid.UUID) ([]shoppinglist.Shopp
 			log.Println(err)
 			return nil, err
 		}
-		fmt.Printf("ID: %d, Name: %s\n", user.Id, user.Name)
 		users = append(users, user)
 	}
 
