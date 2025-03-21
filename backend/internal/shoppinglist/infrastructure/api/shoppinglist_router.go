@@ -93,7 +93,7 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *dto.ShoppinglistItemResponseDto {
 	return &dto.ShoppinglistItemResponseDto{
 		Name:    shoppinglistItem.Name,
-		User:    dto.ShoppingtItemCreator{Id: shoppinglistItem.User.Id, Name: shoppinglistItem.User.Name},
+		User:    dto.ShoppingtItemCreatorResponseDto{Id: shoppinglistItem.User.Id, Name: shoppinglistItem.User.Name, Email: shoppinglistItem.User.Email},
 		AddedAt: shoppinglistItem.AddedAt,
 		Bought:  shoppinglistItem.Bought,
 	}

@@ -97,7 +97,7 @@ func (g *GroupRouter) getGroupByUserEmail(w http.ResponseWriter, r *http.Request
 
 	fmt.Printf("Trying to find group members for email: %s\n", email)
 
-	groupAgg, _ := g.service.FindGroupMembersByEmail(email)
+	groupAgg, _ := g.service.FindGroupByEmail(email)
 	if groupAgg == nil {
 		http.Error(w, "Group not found", http.StatusBadRequest)
 	} else {

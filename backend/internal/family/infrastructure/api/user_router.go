@@ -11,20 +11,23 @@ import (
 )
 
 type UserRouter struct {
-	router  *mux.Router
-	service service.UserService
+	router       *mux.Router
+	service      service.UserService
+	groupService service.GroupService
 }
 
 type UserDto struct {
-	Id    uuid.UUID `json:"id"`
-	Name  string    `json:"name"`
-	Email string    `json:"email"`
+	Id      uuid.UUID `json:"id"`
+	Name    string    `json:"name"`
+	Email   string    `json:"email"`
+	GroupId uuid.UUID `json:"groupId"`
 }
 
-func NewUserRouter(router *mux.Router, service service.UserService) *UserRouter {
+func NewUserRouter(router *mux.Router, service service.UserService, groupService service.GroupService) *UserRouter {
 	userRouter := &UserRouter{
-		router:  router,
-		service: service,
+		router:       router,
+		service:      service,
+		groupService: groupService,
 	}
 
 	router.HandleFunc("/user", userRouter.createUser).Methods("POST")
@@ -40,11 +43,17 @@ func (u *UserRouter) findUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Trying to find user - Email: %s\n", email)
 
 	user, _ := u.service.FindByEmail(email)
+	group, _ := u.groupService.FindGroupByEmail(email)
 	if user == nil {
 		fmt.Printf("User not found %s", user)
 		http.Error(w, "User not found", http.StatusBadRequest)
 	} else {
-		json.NewEncoder(w).Encode(UserDto{Id: user.Id, Name: user.Name, Email: user.Email})
+		userResponse := UserDto{Id: user.Id, Name: user.Name, Email: user.Email}
+		if group != nil {
+			userResponse.GroupId = group.Group.Id
+		}
+
+		json.NewEncoder(w).Encode(userResponse)
 	}
 }
 

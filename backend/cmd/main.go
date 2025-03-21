@@ -75,7 +75,7 @@ func main() {
 	methods := handlers.AllowedMethods([]string{"GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"})
 	origins := handlers.AllowedOrigins([]string{"*"})
 
-	familyApi.NewUserRouter(r, *userService)
+	familyApi.NewUserRouter(r, *userService, *groupService)
 	familyApi.NewGroupRouter(r, *groupService)
 	shoppinglistApi.NewShoppinglistRouter(r, mongoDbClient, shoppinglistService)
 

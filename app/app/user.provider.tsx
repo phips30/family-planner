@@ -5,8 +5,10 @@ import axios from "axios";
 import { API_URL } from './constants';
 
 export interface User {
+    id: string;
     name: string;
     email: string;
+    groupId: string;
 }
 
 export interface UserContextProperties {
@@ -39,7 +41,7 @@ export const UserProvider = ({ children }) => {
             })
             .then((response) => {
                 // Todo: Change this - e.g. just define that app is in offline mode etc.
-                //setLoggedInUser(Object.assign({}, response?.data));
+                setLoggedInUser(Object.assign({}, response?.data));
             })
             .catch((error) => {
                 console.error("Error loading user from server", error);

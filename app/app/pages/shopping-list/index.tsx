@@ -1,7 +1,7 @@
 import {StyleSheet, ScrollView, View} from 'react-native';
 import {
     TextInput, Button, Portal, Dialog, Text, Card,
-    IconButton, MD3Colors
+    IconButton, MD3Colors, ActivityIndicator
 } from 'react-native-paper';
 import React, {useContext, useEffect, useState} from 'react';
 import {router} from "expo-router";
@@ -13,15 +13,15 @@ import {API_URL} from "@/app/constants";
 
 interface ShoppingItem {
     name: string;
-    addedBy: User;
+    user: User;
     addedAt: Date;
     bought: boolean;
     sorter: number;
 }
 
 export namespace ShoppingItem {
-    export function createShoppingItem(name: string, addedBy: User, sorter: number): ShoppingItem {
-        return {name: name, addedBy: addedBy, addedAt: new Date(), bought: false,  sorter: sorter} as ShoppingItem;
+    export function createShoppingItem(name: string, user: User, sorter: number): ShoppingItem {
+        return {name: name, user: user, addedAt: new Date(), bought: false,  sorter: sorter} as ShoppingItem;
     }
 }
 
@@ -35,7 +35,8 @@ export default function ShoppingList() {
     const hideShoppingItemAlreadyExistsDlg = () => setShoppingItemAlreadyExistsDlgVisible(false);
 
     useEffect(() => {
-        axios.get<ShoppingItem[]>(`${API_URL}/shopping-list/${loggedInUser.email}`)
+        const shoppinglistUri = `${API_URL}/shopping-list/${loggedInUser.groupId ? 'group/' : 'user/'}${loggedInUser.groupId ? loggedInUser.groupId : loggedInUser.id}`;
+        axios.get<ShoppingItem[]>(shoppinglistUri)
             .then(response => {
                 setShoppingList(response.data);
             })
@@ -97,6 +98,9 @@ export default function ShoppingList() {
             .then(e => console.log("list saved"));
     }
 
+    if (!shoppingList) {
+        return <ActivityIndicator />;
+    }
     return (
         <>
             <SafeAreaView
@@ -113,7 +117,7 @@ export default function ShoppingList() {
                                 <Card>
                                     <Card.Title
                                         title={item.name}
-                                        subtitle={"Added by: " + item.addedBy.name}
+                                        subtitle={"Added by: " + item.user.name}
                                         left={(props) =>
                                             <IconButton
                                                 icon="delete"

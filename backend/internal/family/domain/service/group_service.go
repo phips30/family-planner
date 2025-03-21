@@ -80,6 +80,6 @@ func (g GroupService) FindGroupMembers(groupId uuid.UUID) (*aggregate.GroupAgg, 
 	return g.repository.Find(groupId)
 }
 
-func (g GroupService) FindGroupMembersByEmail(email string) (*aggregate.GroupAgg, error) {
+func (g GroupService) FindGroupByEmail(email string) (*aggregate.GroupAgg, error) {
 	return g.repository.FindGroupForUser(email)
 }
