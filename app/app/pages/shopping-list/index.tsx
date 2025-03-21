@@ -16,12 +16,11 @@ interface ShoppingItem {
     user: User;
     addedAt: Date;
     bought: boolean;
-    sorter: number;
 }
 
 export namespace ShoppingItem {
-    export function createShoppingItem(name: string, user: User, sorter: number): ShoppingItem {
-        return {name: name, user: user, addedAt: new Date(), bought: false,  sorter: sorter} as ShoppingItem;
+    export function createShoppingItem(name: string, user: User): ShoppingItem {
+        return {name: name, user: user, addedAt: new Date(), bought: false} as ShoppingItem;
     }
 }
 
@@ -58,10 +57,26 @@ export default function ShoppingList() {
 
     function addShoppingItem(name: string): void {
         if (shoppingList.findIndex(item => item.name === name) == -1) {
-            const updatedShoppingList = [
-                ...shoppingList,
-                ShoppingItem.createShoppingItem(newItemName, loggedInUser, shoppingList.length++),
-            ];
+            const newItem = ShoppingItem.createShoppingItem(newItemName, loggedInUser)
+            axios.post<ShoppingItem[]>(`${API_URL}/shopping-list/`, newItem, {
+                transformRequest: [(item) => {
+                    return JSON.stringify([{
+                        name: item.name,
+                        userId: item.user.id,
+                        groupId: item.user.groupId,
+                        addedAt: item.addedAt,
+                        bought: item.bought
+                    }]);
+                }]
+            }).then(response => {
+                setShoppingList([
+                    ...shoppingList, newItem
+                ]);
+
+            }).catch(err => {
+                console.error(err);
+            });
+                /*
             InMemoryDb.storeObject("shopping-list", updatedShoppingList)
                 .then(e => {
                     console.log("list saved", updatedShoppingList)
@@ -70,7 +85,7 @@ export default function ShoppingList() {
                     return axios.post<ShoppingItem[]>(`${API_URL}/shopping-list`, updatedShoppingList);
                 })
                 .then(httpResponse => console.log(httpResponse))
-                .catch(e => {console.log(e)});
+                .catch(e => {console.log(e)});*/
         } else {
             setShoppingItemAlreadyExistsDlgVisible(true);
         }
