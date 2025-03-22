@@ -5,5 +5,5 @@ import (
 )
 
 type ShoppinglistSaveRepository interface {
-	Insert(shoppinglistItems []entity.ShoppinglistItem) ([]entity.ShoppinglistItem, error)
+	Insert(shoppinglistItems []entity.ShoppinglistItem) error
 }

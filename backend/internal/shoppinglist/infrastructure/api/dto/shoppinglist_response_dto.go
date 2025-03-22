@@ -13,6 +13,7 @@ type ShoppingtItemCreatorResponseDto struct {
 }
 
 type ShoppinglistItemResponseDto struct {
+	Id      string                          `json:"id"`
 	Name    string                          `json:"name"`
 	User    ShoppingtItemCreatorResponseDto `json:"user"`
 	AddedAt time.Time                       `json:"addedAt"`

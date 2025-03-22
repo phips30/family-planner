@@ -2,7 +2,7 @@ package service
 
 import (
 	"errors"
-	"family-planner/backend/internal/shoppinglist/common/dto"
+	"family-planner/backend/internal/shoppinglist/domain"
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"family-planner/backend/internal/shoppinglist/domain/port"
 	"family-planner/backend/internal/shoppinglist/domain/repository"
@@ -44,8 +44,12 @@ func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]ent
 		return nil, errRetrievingListForUser
 	}
 
-	userIds := s.getUniqueUserIds(items)
-	itemCreators, err := s.userDataPort.GetUserData(userIds)
+	var userIds []uuid.UUID
+	for _, item := range items {
+		userIds = append(userIds, item.UserId)
+	}
+	uniqueUserIds := s.getUniqueUserIds(userIds)
+	itemCreators, err := s.userDataPort.GetUserData(uniqueUserIds)
 	return *entity.FromExistingItems(items, itemCreators), nil
 }
 
@@ -56,51 +60,44 @@ func (s *ShoppinglistService) LoadShoppingListForGroupId(groupId uuid.UUID) ([]e
 		return nil, errRetrievingListForGroup
 	}
 
-	userIds := s.getUniqueUserIds(items)
-	itemCreators, err := s.userDataPort.GetUserData(userIds)
-	return *entity.FromExistingItems(items, itemCreators), nil
-}
-
-func (s *ShoppinglistService) getUniqueUserIds(items []dto.ShoppinglistItemRequestDto) []uuid.UUID {
 	var userIds []uuid.UUID
 	for _, item := range items {
 		userIds = append(userIds, item.UserId)
 	}
+	uniqueUserIds := s.getUniqueUserIds(userIds)
+	itemCreators, err := s.userDataPort.GetUserData(uniqueUserIds)
+	return *entity.FromExistingItems(items, itemCreators), nil
+}
 
+func (s *ShoppinglistService) getUniqueUserIds(allUserIds []uuid.UUID) []uuid.UUID {
 	seenUserIds := make(map[uuid.UUID]bool)
 	var uniqueUserIds []uuid.UUID
-	for _, userId := range userIds {
+	for _, userId := range allUserIds {
 		if !seenUserIds[userId] {
 			seenUserIds[userId] = true
 			uniqueUserIds = append(uniqueUserIds, userId)
 		}
 	}
-	return userIds
+	return uniqueUserIds
 }
 
-func (s *ShoppinglistService) SaveShoppingList(shoppinglist []dto.ShoppinglistItemRequestDto) ([]entity.ShoppinglistItem, error) {
-	userIds := s.getUniqueUserIds(shoppinglist)
-	itemCreators, err := s.userDataPort.GetUserData(userIds)
+func (s *ShoppinglistService) SaveShoppingList(shoppinglist []domain.ShoppinglistDto) error {
+	var userIds []uuid.UUID
+	for _, item := range shoppinglist {
+		userIds = append(userIds, item.UserId)
+	}
+	uniqueUserIds := s.getUniqueUserIds(userIds)
+	itemCreators, err := s.userDataPort.GetUserData(uniqueUserIds)
 	if err != nil {
-		return nil, errGettingUserData
+		return errGettingUserData
 	}
 
 	items := entity.NewShoppinglistItems(shoppinglist, itemCreators)
 
 	return s.saveRepository.Insert(*items)
-	/*
-	   validation_error := s.validate(shoppinglist)
-	   // TODO: Just aggregate the errors and log them instead of not continuing
-
-	   	if validation_error != nil {
-	   		return nil, fmt.Errorf("%s", validation_error.Error())
-	   	}
-
-	   return s.saveRepository.Insert(shoppinglist)
-	*/
 }
 
-func (s *ShoppinglistService) validate(shoppinglistItems []dto.ShoppinglistItemRequestDto) error {
+func (s *ShoppinglistService) validate(shoppinglistItems []domain.ShoppinglistDto) error {
 	// TODO: Check if item does not already exist for the group for a shopping trip
 	for _, shoppinglistItem := range shoppinglistItems {
 		if shoppinglistItem.Name == "" {

@@ -2,9 +2,10 @@ package api
 
 import (
 	"encoding/json"
-	"family-planner/backend/internal/shoppinglist/common/dto"
+	"family-planner/backend/internal/shoppinglist/domain"
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"family-planner/backend/internal/shoppinglist/domain/service"
+	"family-planner/backend/internal/shoppinglist/infrastructure/api/dto"
 
 	"log"
 	"net/http"
@@ -29,7 +30,9 @@ func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, sh
 
 	router.HandleFunc("/shopping-list/user/{userId}", shoppinglistRouter.findListForUser).Methods("GET")
 	router.HandleFunc("/shopping-list/group/{groupId}", shoppinglistRouter.findListForGroup).Methods("GET")
-	router.HandleFunc("/shopping-list/", shoppinglistRouter.createList).Methods("POST")
+	router.HandleFunc("/shopping-list/", shoppinglistRouter.addItems).Methods("POST")
+	//router.HandleFunc("/shopping-list/{}/{id}", shoppinglistRouter.updateItems).Methods("PUT")
+	//router.HandleFunc("/shopping-list/", shoppinglistRouter.deleteItems).Methods("DELETE")
 
 	return shoppinglistRouter
 }
@@ -76,14 +79,14 @@ func (s *ShoppinglistRouter) findListForGroup(w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(shoppinglistResponse)
 }
 
-func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) {
+func (s *ShoppinglistRouter) addItems(w http.ResponseWriter, r *http.Request) {
 	var shoppinglistRequest []dto.ShoppinglistItemRequestDto
 	if err := json.NewDecoder(r.Body).Decode(&shoppinglistRequest); err != nil {
 		log.Println("error parsing request")
 		http.Error(w, "error parsing request", http.StatusBadRequest)
 	}
 
-	_, err := s.service.SaveShoppingList(shoppinglistRequest)
+	err := s.service.SaveShoppingList(s.mapToDomainObject(shoppinglistRequest))
 	if err != nil {
 		log.Println("Error saving shopping list:", err.Error())
 	}
@@ -92,9 +95,25 @@ func (s *ShoppinglistRouter) createList(w http.ResponseWriter, r *http.Request) 
 
 func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *dto.ShoppinglistItemResponseDto {
 	return &dto.ShoppinglistItemResponseDto{
+		Id:      shoppinglistItem.Id,
 		Name:    shoppinglistItem.Name,
 		User:    dto.ShoppingtItemCreatorResponseDto{Id: shoppinglistItem.User.Id, Name: shoppinglistItem.User.Name, Email: shoppinglistItem.User.Email},
 		AddedAt: shoppinglistItem.AddedAt,
 		Bought:  shoppinglistItem.Bought,
 	}
+}
+
+func (s *ShoppinglistRouter) mapToDomainObject(shoppinglistItems []dto.ShoppinglistItemRequestDto) []domain.ShoppinglistDto {
+	var domainShoppingListItems []domain.ShoppinglistDto
+	for _, item := range shoppinglistItems {
+		domainShoppingListItem := domain.ShoppinglistDto{
+			Name:    item.Name,
+			UserId:  item.UserId,
+			GroupId: item.GroupId,
+			AddedAt: item.AddedAt,
+			Bought:  item.Bought,
+		}
+		domainShoppingListItems = append(domainShoppingListItems, domainShoppingListItem)
+	}
+	return domainShoppingListItems
 }

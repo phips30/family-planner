@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"context"
-	"family-planner/backend/internal/shoppinglist/common/dto"
+	"family-planner/backend/internal/shoppinglist/domain"
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"log"
 	"time"
@@ -12,6 +12,7 @@ import (
 )
 
 type ShoppinglistMongoItem struct {
+	Id      string    `bson:"_id"`
 	Name    string    `bson:"name"`
 	AddedAt time.Time `bson:"addedAt"`
 	UserId  string    `bson:"userId"`
@@ -19,24 +20,23 @@ type ShoppinglistMongoItem struct {
 	Bought  bool      `bson:"bought"`
 }
 
-func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([]dto.ShoppinglistItemRequestDto, error) {
-	var shoppinglistItems []dto.ShoppinglistItemRequestDto
+func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([]domain.ShoppinglistDto, error) {
+	var shoppinglistDtos []domain.ShoppinglistDto
 	for cursor.Next(ctx) {
 		var item ShoppinglistMongoItem
 		err := cursor.Decode(&item)
-
 		if err != nil {
 			log.Fatal(err)
 			return nil, err
 		}
-		shoppinglistItems = append(shoppinglistItems, MapToDomainObject(item))
+		shoppinglistDtos = append(shoppinglistDtos, MapToDto(item))
 	}
 
 	if err := cursor.Err(); err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
-	return shoppinglistItems, nil
+	return shoppinglistDtos, nil
 }
 
 func MapToMongoBsonObject(shoppinglistItems []entity.ShoppinglistItem) []interface{} {
@@ -54,10 +54,11 @@ func MapToMongoBsonObject(shoppinglistItems []entity.ShoppinglistItem) []interfa
 	return shoppinglistItemMongoInterfaces
 }
 
-func MapToDomainObject(shoppinglistMongoItem ShoppinglistMongoItem) dto.ShoppinglistItemRequestDto {
+func MapToDto(shoppinglistMongoItem ShoppinglistMongoItem) domain.ShoppinglistDto {
 	userId, _ := uuid.Parse(shoppinglistMongoItem.UserId)
 	groupId, _ := uuid.Parse(shoppinglistMongoItem.GroupId)
-	return dto.ShoppinglistItemRequestDto{
+	return domain.ShoppinglistDto{
+		Id:      shoppinglistMongoItem.Id,
 		Name:    shoppinglistMongoItem.Name,
 		AddedAt: shoppinglistMongoItem.AddedAt,
 		UserId:  userId,

@@ -17,17 +17,17 @@ func NewShoppinglistRepositoryImpl(ctx context.Context, mongoDbClient *mongo.Dat
 	return &ShoppinglistRepositoryImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
-func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.ShoppinglistItem) ([]entity.ShoppinglistItem, error) {
+func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.ShoppinglistItem) error {
 	mongoShoppingListitems := MapToMongoBsonObject(shoppinglistItems)
 	result, err := s.mongoDbCollection.InsertMany(s.ctx, mongoShoppingListitems)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if len(result.InsertedIDs) == len(shoppinglistItems) {
-		return shoppinglistItems, nil
+		return nil
 	}
 
-	return nil, fmt.Errorf("could not insert all documents into mongodb")
+	return fmt.Errorf("could not insert all documents into mongodb")
 }

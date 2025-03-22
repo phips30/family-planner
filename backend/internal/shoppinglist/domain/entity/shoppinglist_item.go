@@ -2,7 +2,7 @@ package entity
 
 import (
 	"errors"
-	"family-planner/backend/internal/shoppinglist/common/dto"
+	"family-planner/backend/internal/shoppinglist/domain"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,6 +15,7 @@ type ShoppinglistItemCreator struct {
 }
 
 type ShoppinglistItem struct {
+	Id      string
 	Name    string
 	AddedAt time.Time
 	User    ShoppinglistItemCreator
@@ -41,7 +42,7 @@ func NewShoppinglistItem(name string, addedAt time.Time, user ShoppinglistItemCr
 	}, nil
 }
 
-func NewShoppinglistItems(items []dto.ShoppinglistItemRequestDto, userData []ShoppinglistItemCreator) *[]ShoppinglistItem {
+func NewShoppinglistItems(items []domain.ShoppinglistDto, userData []ShoppinglistItemCreator) *[]ShoppinglistItem {
 	var shoppinglistItems []ShoppinglistItem
 	for _, item := range items {
 		var itemCreator ShoppinglistItemCreator
@@ -61,7 +62,7 @@ func NewShoppinglistItems(items []dto.ShoppinglistItemRequestDto, userData []Sho
 	return &shoppinglistItems
 }
 
-func FromExistingItems(items []dto.ShoppinglistItemRequestDto, userData []ShoppinglistItemCreator) *[]ShoppinglistItem {
+func FromExistingItems(items []domain.ShoppinglistDto, userData []ShoppinglistItemCreator) *[]ShoppinglistItem {
 	var shoppinglistItems []ShoppinglistItem
 	for _, item := range items {
 		var itemCreator ShoppinglistItemCreator
@@ -73,6 +74,7 @@ func FromExistingItems(items []dto.ShoppinglistItemRequestDto, userData []Shoppi
 		}
 		// TODO: What to do if user does not exist
 		shoppinglistitem := ShoppinglistItem{
+			Id:      item.Id,
 			Name:    item.Name,
 			AddedAt: item.AddedAt,
 			User:    itemCreator,
