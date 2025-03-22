@@ -32,7 +32,7 @@ func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, sh
 	router.HandleFunc("/shopping-list/group/{groupId}", shoppinglistRouter.findListForGroup).Methods("GET")
 	router.HandleFunc("/shopping-list/", shoppinglistRouter.addItems).Methods("POST")
 	//router.HandleFunc("/shopping-list/{}/{id}", shoppinglistRouter.updateItems).Methods("PUT")
-	//router.HandleFunc("/shopping-list/", shoppinglistRouter.deleteItems).Methods("DELETE")
+	router.HandleFunc("/shopping-list/{itemId}", shoppinglistRouter.deleteItem).Methods("DELETE")
 
 	return shoppinglistRouter
 }
@@ -89,6 +89,20 @@ func (s *ShoppinglistRouter) addItems(w http.ResponseWriter, r *http.Request) {
 	err := s.service.SaveShoppingList(s.mapToDomainObject(shoppinglistRequest))
 	if err != nil {
 		log.Println("Error saving shopping list:", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *ShoppinglistRouter) deleteItem(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	itemId := vars["itemId"]
+
+	err := s.service.DeleteItem(itemId)
+	if err != nil {
+		log.Println("Error deleting item:", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+
 	}
 	w.WriteHeader(http.StatusOK)
 }

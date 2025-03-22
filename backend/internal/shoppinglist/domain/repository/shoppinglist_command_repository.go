@@ -4,6 +4,8 @@ import (
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 )
 
-type ShoppinglistSaveRepository interface {
+type ShoppinglistCommandRepository interface {
 	Insert(shoppinglistItems []entity.ShoppinglistItem) error
+	Delete(itemId string) error
+	Update(shoppingItem entity.ShoppinglistItem) error
 }

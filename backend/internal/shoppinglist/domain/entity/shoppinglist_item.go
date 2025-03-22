@@ -23,6 +23,10 @@ type ShoppinglistItem struct {
 	Bought  bool
 }
 
+func (s *ShoppinglistItem) SetBought() {
+	s.Bought = !s.Bought
+}
+
 func NewShoppinglistItem(name string, addedAt time.Time, user ShoppinglistItemCreator, groupId uuid.UUID, bought bool) (*ShoppinglistItem, error) {
 	if addedAt == (time.Time{}) {
 		addedAt = time.Now()
@@ -72,17 +76,20 @@ func FromExistingItems(items []domain.ShoppinglistDto, userData []ShoppinglistIt
 				break
 			}
 		}
-		// TODO: What to do if user does not exist
-		shoppinglistitem := ShoppinglistItem{
-			Id:      item.Id,
-			Name:    item.Name,
-			AddedAt: item.AddedAt,
-			User:    itemCreator,
-			GroupId: item.GroupId,
-			Bought:  item.Bought,
-		}
-		shoppinglistItems = append(shoppinglistItems, shoppinglistitem)
+		shoppinglistItems = append(shoppinglistItems, *FromExistingItem(item, itemCreator))
 	}
 
 	return &shoppinglistItems
+}
+
+func FromExistingItem(item domain.ShoppinglistDto, itemCreator ShoppinglistItemCreator) *ShoppinglistItem {
+	// TODO: What to do if user does not exist
+	return &ShoppinglistItem{
+		Id:      item.Id,
+		Name:    item.Name,
+		AddedAt: item.AddedAt,
+		User:    itemCreator,
+		GroupId: item.GroupId,
+		Bought:  item.Bought,
+	}
 }

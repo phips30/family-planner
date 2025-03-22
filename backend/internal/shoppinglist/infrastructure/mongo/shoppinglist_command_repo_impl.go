@@ -5,6 +5,8 @@ import (
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"fmt"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -13,7 +15,7 @@ type ShoppinglistRepositoryImpl struct {
 	mongoDbCollection *mongo.Collection
 }
 
-func NewShoppinglistRepositoryImpl(ctx context.Context, mongoDbClient *mongo.Database) *ShoppinglistRepositoryImpl {
+func NewShoppinglistCommandRepositoryImpl(ctx context.Context, mongoDbClient *mongo.Database) *ShoppinglistRepositoryImpl {
 	return &ShoppinglistRepositoryImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
@@ -30,4 +32,23 @@ func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.Shoppingl
 	}
 
 	return fmt.Errorf("could not insert all documents into mongodb")
+}
+
+func (s *ShoppinglistRepositoryImpl) Update(shoppingItem entity.ShoppinglistItem) error {
+	panic("unimplemented")
+}
+
+func (s *ShoppinglistRepositoryImpl) Delete(itemId string) error {
+	objectId, err := primitive.ObjectIDFromHex(itemId)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": objectId}
+	_, err = s.mongoDbCollection.DeleteOne(s.ctx, filter)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }

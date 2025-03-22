@@ -55,7 +55,7 @@ func main() {
 	userRepository := postgres.NewUserRepositoryImpl(ctx, dbpool)
 	groupRepository := postgres.NewGroupRepositoryImpl(ctx, dbpool, userRepository)
 	userDataAdapter := postgres.NewUserDataAdapter(ctx, dbpool)
-	shoppinglistSaveRepo := mongo.NewShoppinglistRepositoryImpl(ctx, mongoDbClient)
+	shoppinglistCommandRepo := mongo.NewShoppinglistCommandRepositoryImpl(ctx, mongoDbClient)
 	shoppinglistQueryUserRepo := mongo.NewShoppinglistQueryUserRepositoryImpl(ctx, mongoDbClient)
 	shoppinglistQueryGroupRepo := mongo.NewShoppinglistQueryGroupRepoImpl(ctx, mongoDbClient)
 
@@ -63,7 +63,7 @@ func main() {
 	userService := familyService.NewUserService(userRepository)
 	groupService := familyService.NewGroupService(groupRepository, *userService)
 	shoppinglistService := shoppinglistService.NewShoppinglistService(
-		shoppinglistSaveRepo,
+		shoppinglistCommandRepo,
 		shoppinglistQueryUserRepo,
 		shoppinglistQueryGroupRepo,
 		userDataAdapter,

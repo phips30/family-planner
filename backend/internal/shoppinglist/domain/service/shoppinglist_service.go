@@ -13,7 +13,7 @@ import (
 )
 
 type ShoppinglistService struct {
-	saveRepository       repository.ShoppinglistSaveRepository
+	commandRepository    repository.ShoppinglistCommandRepository
 	queryUserRepository  repository.ShoppinglistQueryRepository
 	queryGroupRepository repository.ShoppinglistQueryRepository
 	userDataPort         port.UserDataPort
@@ -23,14 +23,15 @@ var (
 	errRetrievingListForUser  = errors.New("error getting shopping list for user")
 	errRetrievingListForGroup = errors.New("error getting shopping list for group")
 	errGettingUserData        = errors.New("error loading user data for shopping list items")
+	errNoItemIdProvided       = errors.New("error no item id provided")
 )
 
-func NewShoppinglistService(saveRepository repository.ShoppinglistSaveRepository,
+func NewShoppinglistService(commandRepository repository.ShoppinglistCommandRepository,
 	queryUserRepository repository.ShoppinglistQueryRepository,
 	queryGroupRepository repository.ShoppinglistQueryRepository,
 	userDataPort port.UserDataPort) *ShoppinglistService {
 	return &ShoppinglistService{
-		saveRepository:       saveRepository,
+		commandRepository:    commandRepository,
 		queryUserRepository:  queryUserRepository,
 		queryGroupRepository: queryGroupRepository,
 		userDataPort:         userDataPort,
@@ -94,7 +95,25 @@ func (s *ShoppinglistService) SaveShoppingList(shoppinglist []domain.Shoppinglis
 
 	items := entity.NewShoppinglistItems(shoppinglist, itemCreators)
 
-	return s.saveRepository.Insert(*items)
+	return s.commandRepository.Insert(*items)
+}
+
+func (s *ShoppinglistService) SetItemBough(item domain.ShoppinglistDto) error {
+	itemCreators, err := s.userDataPort.GetUserData([]uuid.UUID{item.UserId})
+	if err != nil || len(itemCreators) == 0 {
+		return errGettingUserData
+	}
+
+	shoppingItem := entity.FromExistingItem(item, itemCreators[0])
+	shoppingItem.SetBought()
+	return s.commandRepository.Update(*shoppingItem)
+}
+
+func (s *ShoppinglistService) DeleteItem(itemId string) error {
+	if itemId != "" {
+		return errNoItemIdProvided
+	}
+	return s.commandRepository.Delete(itemId)
 }
 
 func (s *ShoppinglistService) validate(shoppinglistItems []domain.ShoppinglistDto) error {
