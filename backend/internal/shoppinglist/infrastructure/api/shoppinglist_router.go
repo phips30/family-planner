@@ -15,6 +15,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+const BASE_ROUTE = "/v1/shopping-list/"
+
 type ShoppinglistRouter struct {
 	router        *mux.Router
 	mongoDbClient *mongo.Database
@@ -28,11 +30,11 @@ func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, sh
 		service:       shoppinglistService,
 	}
 
-	router.HandleFunc("/shopping-list/user/{userId}", shoppinglistRouter.findListForUser).Methods("GET")
-	router.HandleFunc("/shopping-list/group/{groupId}", shoppinglistRouter.findListForGroup).Methods("GET")
-	router.HandleFunc("/shopping-list/", shoppinglistRouter.addItems).Methods("POST")
-	//router.HandleFunc("/shopping-list/{}/{id}", shoppinglistRouter.updateItems).Methods("PUT")
-	router.HandleFunc("/shopping-list/{itemId}", shoppinglistRouter.deleteItem).Methods("DELETE")
+	router.HandleFunc(BASE_ROUTE+"user/{userId}", shoppinglistRouter.findListForUser).Methods("GET")
+	router.HandleFunc(BASE_ROUTE+"group/{groupId}", shoppinglistRouter.findListForGroup).Methods("GET")
+	router.HandleFunc(BASE_ROUTE, shoppinglistRouter.addItems).Methods("POST")
+	router.HandleFunc(BASE_ROUTE+"{itemId}/bought", shoppinglistRouter.itemBought).Methods("PUT")
+	router.HandleFunc(BASE_ROUTE+"{itemId}", shoppinglistRouter.deleteItem).Methods("DELETE")
 
 	return shoppinglistRouter
 }
@@ -90,6 +92,19 @@ func (s *ShoppinglistRouter) addItems(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Error saving shopping list:", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *ShoppinglistRouter) itemBought(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	itemId := vars["itemId"]
+
+	err := s.service.SetItemBough(itemId)
+	if err != nil {
+		log.Println("Error setting item to bought:", err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+
 	}
 	w.WriteHeader(http.StatusOK)
 }

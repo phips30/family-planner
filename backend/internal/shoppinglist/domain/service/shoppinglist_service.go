@@ -13,13 +13,13 @@ import (
 )
 
 type ShoppinglistService struct {
-	commandRepository    repository.ShoppinglistCommandRepository
-	queryUserRepository  repository.ShoppinglistQueryRepository
-	queryGroupRepository repository.ShoppinglistQueryRepository
-	userDataPort         port.UserDataPort
+	commandRepository repository.ShoppinglistCommandRepository
+	queryRepository   repository.ShoppinglistQueryRepository
+	userDataPort      port.UserDataPort
 }
 
 var (
+	errGettingItem            = errors.New("error getting shopping list item")
 	errRetrievingListForUser  = errors.New("error getting shopping list for user")
 	errRetrievingListForGroup = errors.New("error getting shopping list for group")
 	errGettingUserData        = errors.New("error loading user data for shopping list items")
@@ -27,19 +27,17 @@ var (
 )
 
 func NewShoppinglistService(commandRepository repository.ShoppinglistCommandRepository,
-	queryUserRepository repository.ShoppinglistQueryRepository,
-	queryGroupRepository repository.ShoppinglistQueryRepository,
+	queryRepository repository.ShoppinglistQueryRepository,
 	userDataPort port.UserDataPort) *ShoppinglistService {
 	return &ShoppinglistService{
-		commandRepository:    commandRepository,
-		queryUserRepository:  queryUserRepository,
-		queryGroupRepository: queryGroupRepository,
-		userDataPort:         userDataPort,
+		commandRepository: commandRepository,
+		queryRepository:   queryRepository,
+		userDataPort:      userDataPort,
 	}
 }
 
 func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]entity.ShoppinglistItem, error) {
-	items, err := s.queryUserRepository.FindAll(userid)
+	items, err := s.queryRepository.FindAllByUserId(userid)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, errRetrievingListForUser
@@ -55,7 +53,7 @@ func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]ent
 }
 
 func (s *ShoppinglistService) LoadShoppingListForGroupId(groupId uuid.UUID) ([]entity.ShoppinglistItem, error) {
-	items, err := s.queryGroupRepository.FindAll(groupId)
+	items, err := s.queryRepository.FindAllByGroupId(groupId)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, errRetrievingListForGroup
@@ -98,19 +96,24 @@ func (s *ShoppinglistService) SaveShoppingList(shoppinglist []domain.Shoppinglis
 	return s.commandRepository.Insert(*items)
 }
 
-func (s *ShoppinglistService) SetItemBough(item domain.ShoppinglistDto) error {
+func (s *ShoppinglistService) SetItemBough(itemId string) error {
+	item, err := s.queryRepository.FindById(itemId)
+	if err != nil || item == nil {
+		return errGettingItem
+	}
+
 	itemCreators, err := s.userDataPort.GetUserData([]uuid.UUID{item.UserId})
-	if err != nil || len(itemCreators) == 0 {
+	if err != nil {
 		return errGettingUserData
 	}
 
-	shoppingItem := entity.FromExistingItem(item, itemCreators[0])
+	shoppingItem := entity.FromExistingItem(*item, itemCreators[0])
 	shoppingItem.SetBought()
 	return s.commandRepository.Update(*shoppingItem)
 }
 
 func (s *ShoppinglistService) DeleteItem(itemId string) error {
-	if itemId != "" {
+	if itemId == "" {
 		return errNoItemIdProvided
 	}
 	return s.commandRepository.Delete(itemId)

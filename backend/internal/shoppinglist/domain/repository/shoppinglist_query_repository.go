@@ -7,5 +7,7 @@ import (
 )
 
 type ShoppinglistQueryRepository interface {
-	FindAll(id uuid.UUID) ([]domain.ShoppinglistDto, error)
+	FindAllByGroupId(groupId uuid.UUID) ([]domain.ShoppinglistDto, error)
+	FindAllByUserId(userId uuid.UUID) ([]domain.ShoppinglistDto, error)
+	FindById(id string) (*domain.ShoppinglistDto, error)
 }
