@@ -33,7 +33,7 @@ func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, sh
 	router.HandleFunc(BASE_ROUTE+"user/{userId}", shoppinglistRouter.findListForUser).Methods("GET")
 	router.HandleFunc(BASE_ROUTE+"group/{groupId}", shoppinglistRouter.findListForGroup).Methods("GET")
 	router.HandleFunc(BASE_ROUTE, shoppinglistRouter.addItems).Methods("POST")
-	router.HandleFunc(BASE_ROUTE+"{itemId}/bought", shoppinglistRouter.itemBought).Methods("PUT")
+	router.HandleFunc(BASE_ROUTE+"{itemId}/buy", shoppinglistRouter.itemBought).Methods("PUT")
 	router.HandleFunc(BASE_ROUTE+"{itemId}", shoppinglistRouter.deleteItem).Methods("DELETE")
 
 	return shoppinglistRouter

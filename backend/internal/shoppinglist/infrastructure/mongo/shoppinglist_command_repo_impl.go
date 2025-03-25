@@ -35,7 +35,19 @@ func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.Shoppingl
 }
 
 func (s *ShoppinglistRepositoryImpl) Update(shoppingItem entity.ShoppinglistItem) error {
-	panic("unimplemented")
+	objectId, err := primitive.ObjectIDFromHex(shoppingItem.Id)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": objectId}
+	update := bson.M{"$set": bson.M{"name": shoppingItem.Name, "bought": shoppingItem.Bought}}
+
+	_, err = s.mongoDbCollection.UpdateOne(s.ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *ShoppinglistRepositoryImpl) Delete(itemId string) error {
