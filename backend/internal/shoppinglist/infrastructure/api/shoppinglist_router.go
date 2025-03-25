@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"family-planner/backend/internal/shoppinglist/domain"
-	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"family-planner/backend/internal/shoppinglist/domain/service"
 	"family-planner/backend/internal/shoppinglist/infrastructure/api/dto"
 
@@ -127,11 +126,11 @@ func (s *ShoppinglistRouter) deleteItem(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *dto.ShoppinglistItemResponseDto {
+func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem service.ShoppinglistItemResponse) *dto.ShoppinglistItemResponseDto {
 	return &dto.ShoppinglistItemResponseDto{
 		Id:      shoppinglistItem.Id,
-		Name:    shoppinglistItem.Name.ToString(),
-		User:    dto.ShoppingtItemCreatorResponseDto{Id: shoppinglistItem.User.Id.UUID, Name: shoppinglistItem.User.Name, Email: shoppinglistItem.User.Email},
+		Name:    shoppinglistItem.Name,
+		User:    dto.ShoppingtItemCreatorResponseDto{Id: shoppinglistItem.User.Id, Name: shoppinglistItem.User.Name, Email: shoppinglistItem.User.Email},
 		AddedAt: shoppinglistItem.AddedAt,
 		Bought:  shoppinglistItem.Bought,
 	}
