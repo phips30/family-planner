@@ -96,7 +96,7 @@ func (s *ShoppinglistService) SaveShoppingList(shoppinglist []domain.Shoppinglis
 	return s.commandRepository.Insert(*items)
 }
 
-func (s *ShoppinglistService) SetItemBough(itemId string) error {
+func (s *ShoppinglistService) UpdateItem(itemId string, name string, bought bool) error {
 	item, err := s.queryRepository.FindById(itemId)
 	if err != nil || item == nil {
 		return errGettingItem
@@ -108,7 +108,13 @@ func (s *ShoppinglistService) SetItemBough(itemId string) error {
 	}
 
 	shoppingItem := entity.FromExistingItem(*item, itemCreators[0])
-	shoppingItem.SetBought()
+	itemName, err := entity.NewItemName(name)
+	if err != nil {
+		return err
+	}
+
+	shoppingItem.SetName(*itemName)
+	shoppingItem.SetBought(bought)
 	return s.commandRepository.Update(*shoppingItem)
 }
 

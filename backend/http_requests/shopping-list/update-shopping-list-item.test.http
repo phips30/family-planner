@@ -1,0 +1,8 @@
+PUT http://localhost:8080/v1/shopping-list/ HTTP/1.1
+content-type: application/json
+
+{
+    "id": "67dc7b41eb2dde05cf845d75",
+    "name": "updated item not bought",
+    "bought": false
+}

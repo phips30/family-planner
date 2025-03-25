@@ -13,3 +13,9 @@ type ShoppinglistItemRequestDto struct {
 	AddedAt time.Time `json:"addedAt"`
 	Bought  bool      `json:"bought"`
 }
+
+type ShoppinglistItemUpdateRequestDto struct {
+	Id     string `json:"id"`
+	Name   string `json:"name"`
+	Bought bool   `json:"bought"`
+}

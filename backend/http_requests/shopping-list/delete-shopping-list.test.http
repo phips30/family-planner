@@ -1,0 +1,1 @@
+DELETE http://localhost:8080/v1/shopping-list/67ddd8592aa2a92e1474607b HTTP/1.1

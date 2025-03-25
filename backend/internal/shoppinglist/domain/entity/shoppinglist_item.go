@@ -16,23 +16,24 @@ type ShoppinglistItemCreator struct {
 
 type ShoppinglistItem struct {
 	Id      string
-	Name    string
+	Name    ItemName
 	AddedAt time.Time
 	User    ShoppinglistItemCreator
 	GroupId uuid.UUID
 	Bought  bool
 }
 
-func (s *ShoppinglistItem) SetBought() {
-	s.Bought = !s.Bought
+func (s *ShoppinglistItem) SetBought(bought bool) {
+	s.Bought = bought
 }
 
-func NewShoppinglistItem(name string, addedAt time.Time, user ShoppinglistItemCreator, groupId uuid.UUID, bought bool) (*ShoppinglistItem, error) {
+func (s *ShoppinglistItem) SetName(itemName ItemName) {
+	s.Name = itemName
+}
+
+func NewShoppinglistItem(name ItemName, addedAt time.Time, user ShoppinglistItemCreator, groupId uuid.UUID, bought bool) (*ShoppinglistItem, error) {
 	if addedAt == (time.Time{}) {
 		addedAt = time.Now()
-	}
-	if name == "" {
-		return nil, errors.New("no name provided")
 	}
 	if user == (ShoppinglistItemCreator{}) {
 		return nil, errors.New("no user provided")
@@ -57,7 +58,12 @@ func NewShoppinglistItems(items []domain.ShoppinglistDto, userData []Shoppinglis
 			}
 		}
 		// TODO: What to do if user does not exist
-		shoppinglistitem, err := NewShoppinglistItem(item.Name, item.AddedAt, itemCreator, item.GroupId, item.Bought)
+		itemName, err := NewItemName(item.Name)
+		if err != nil {
+			break
+		}
+
+		shoppinglistitem, err := NewShoppinglistItem(*itemName, item.AddedAt, itemCreator, item.GroupId, item.Bought)
 		if err == nil {
 			// Just omit wrong items for now
 			shoppinglistItems = append(shoppinglistItems, *shoppinglistitem)
@@ -83,10 +89,15 @@ func FromExistingItems(items []domain.ShoppinglistDto, userData []ShoppinglistIt
 }
 
 func FromExistingItem(item domain.ShoppinglistDto, itemCreator ShoppinglistItemCreator) *ShoppinglistItem {
+	itemName, err := NewItemName(item.Name)
+	if err != nil {
+		return nil
+	}
+
 	// TODO: What to do if user does not exist
 	return &ShoppinglistItem{
 		Id:      item.Id,
-		Name:    item.Name,
+		Name:    *itemName,
 		AddedAt: item.AddedAt,
 		User:    itemCreator,
 		GroupId: item.GroupId,

@@ -33,7 +33,7 @@ func NewShoppinglistRouter(router *mux.Router, mongoDbClient *mongo.Database, sh
 	router.HandleFunc(BASE_ROUTE+"user/{userId}", shoppinglistRouter.findListForUser).Methods("GET")
 	router.HandleFunc(BASE_ROUTE+"group/{groupId}", shoppinglistRouter.findListForGroup).Methods("GET")
 	router.HandleFunc(BASE_ROUTE, shoppinglistRouter.addItems).Methods("POST")
-	router.HandleFunc(BASE_ROUTE+"{itemId}/buy", shoppinglistRouter.itemBought).Methods("PUT")
+	router.HandleFunc(BASE_ROUTE, shoppinglistRouter.updateItem).Methods("PUT")
 	router.HandleFunc(BASE_ROUTE+"{itemId}", shoppinglistRouter.deleteItem).Methods("DELETE")
 
 	return shoppinglistRouter
@@ -96,13 +96,18 @@ func (s *ShoppinglistRouter) addItems(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *ShoppinglistRouter) itemBought(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	itemId := vars["itemId"]
+func (s *ShoppinglistRouter) updateItem(w http.ResponseWriter, r *http.Request) {
+	var shoppinglistItemUpdateRequestDto dto.ShoppinglistItemUpdateRequestDto
+	if err := json.NewDecoder(r.Body).Decode(&shoppinglistItemUpdateRequestDto); err != nil {
+		log.Println("error parsing request")
+		http.Error(w, "error parsing request", http.StatusBadRequest)
+	}
 
-	err := s.service.SetItemBough(itemId)
+	err := s.service.UpdateItem(shoppinglistItemUpdateRequestDto.Id,
+		shoppinglistItemUpdateRequestDto.Name,
+		shoppinglistItemUpdateRequestDto.Bought)
 	if err != nil {
-		log.Println("Error setting item to bought:", err.Error())
+		log.Println("Error updating item:", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 
 	}
@@ -125,7 +130,7 @@ func (s *ShoppinglistRouter) deleteItem(w http.ResponseWriter, r *http.Request) 
 func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem entity.ShoppinglistItem) *dto.ShoppinglistItemResponseDto {
 	return &dto.ShoppinglistItemResponseDto{
 		Id:      shoppinglistItem.Id,
-		Name:    shoppinglistItem.Name,
+		Name:    shoppinglistItem.Name.ToString(),
 		User:    dto.ShoppingtItemCreatorResponseDto{Id: shoppinglistItem.User.Id, Name: shoppinglistItem.User.Name, Email: shoppinglistItem.User.Email},
 		AddedAt: shoppinglistItem.AddedAt,
 		Bought:  shoppinglistItem.Bought,
