@@ -4,12 +4,10 @@ import (
 	"errors"
 	"family-planner/backend/internal/shoppinglist/domain"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type ShoppinglistItemCreator struct {
-	Id    uuid.UUID
+	Id    UserId
 	Name  string
 	Email string
 }
@@ -19,7 +17,7 @@ type ShoppinglistItem struct {
 	Name    ItemName
 	AddedAt time.Time
 	User    ShoppinglistItemCreator
-	GroupId uuid.UUID
+	GroupId GroupId
 	Bought  bool
 }
 
@@ -31,7 +29,7 @@ func (s *ShoppinglistItem) SetName(itemName ItemName) {
 	s.Name = itemName
 }
 
-func NewShoppinglistItem(name ItemName, addedAt time.Time, user ShoppinglistItemCreator, groupId uuid.UUID, bought bool) (*ShoppinglistItem, error) {
+func NewShoppinglistItem(name ItemName, addedAt time.Time, user ShoppinglistItemCreator, groupId GroupId, bought bool) (*ShoppinglistItem, error) {
 	if addedAt == (time.Time{}) {
 		addedAt = time.Now()
 	}
@@ -52,7 +50,7 @@ func NewShoppinglistItems(items []domain.ShoppinglistDto, userData []Shoppinglis
 	for _, item := range items {
 		var itemCreator ShoppinglistItemCreator
 		for _, user := range userData {
-			if user.Id == item.UserId {
+			if user.Id.UUID == item.UserId {
 				itemCreator = user
 				break
 			}
@@ -63,7 +61,7 @@ func NewShoppinglistItems(items []domain.ShoppinglistDto, userData []Shoppinglis
 			break
 		}
 
-		shoppinglistitem, err := NewShoppinglistItem(*itemName, item.AddedAt, itemCreator, item.GroupId, item.Bought)
+		shoppinglistitem, err := NewShoppinglistItem(*itemName, item.AddedAt, itemCreator, *NewGroupId(item.GroupId), item.Bought)
 		if err == nil {
 			// Just omit wrong items for now
 			shoppinglistItems = append(shoppinglistItems, *shoppinglistitem)
@@ -77,7 +75,7 @@ func FromExistingItems(items []domain.ShoppinglistDto, userData []ShoppinglistIt
 	for _, item := range items {
 		var itemCreator ShoppinglistItemCreator
 		for _, user := range userData {
-			if user.Id == item.UserId {
+			if user.Id.UUID == item.UserId {
 				itemCreator = user
 				break
 			}
@@ -100,7 +98,7 @@ func FromExistingItem(item domain.ShoppinglistDto, itemCreator ShoppinglistItemC
 		Name:    *itemName,
 		AddedAt: item.AddedAt,
 		User:    itemCreator,
-		GroupId: item.GroupId,
+		GroupId: *NewGroupId(item.GroupId),
 		Bought:  item.Bought,
 	}
 }

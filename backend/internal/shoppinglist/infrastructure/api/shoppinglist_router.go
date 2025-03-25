@@ -131,7 +131,7 @@ func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem entity.Shoppin
 	return &dto.ShoppinglistItemResponseDto{
 		Id:      shoppinglistItem.Id,
 		Name:    shoppinglistItem.Name.ToString(),
-		User:    dto.ShoppingtItemCreatorResponseDto{Id: shoppinglistItem.User.Id, Name: shoppinglistItem.User.Name, Email: shoppinglistItem.User.Email},
+		User:    dto.ShoppingtItemCreatorResponseDto{Id: shoppinglistItem.User.Id.UUID, Name: shoppinglistItem.User.Name, Email: shoppinglistItem.User.Email},
 		AddedAt: shoppinglistItem.AddedAt,
 		Bought:  shoppinglistItem.Bought,
 	}

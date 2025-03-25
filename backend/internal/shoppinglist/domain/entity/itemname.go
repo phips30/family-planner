@@ -4,8 +4,8 @@ import "errors"
 
 type ItemName string
 
-func (i *ItemName) ToString() string {
-	return string(*i)
+func (i ItemName) ToString() string {
+	return string(i)
 }
 
 func NewItemName(name string) (*ItemName, error) {
