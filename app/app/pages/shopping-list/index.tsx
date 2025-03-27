@@ -12,6 +12,7 @@ import axios from "axios";
 import {API_URL} from "@/app/constants";
 
 interface ShoppingItem {
+    id: string;
     name: string;
     user: User;
     addedAt: Date;
@@ -34,7 +35,7 @@ export default function ShoppingList() {
     const hideShoppingItemAlreadyExistsDlg = () => setShoppingItemAlreadyExistsDlgVisible(false);
 
     useEffect(() => {
-        const shoppinglistUri = `${API_URL}/shopping-list/${loggedInUser.groupId ? 'group/' : 'user/'}${loggedInUser.groupId ? loggedInUser.groupId : loggedInUser.id}`;
+        const shoppinglistUri = `${API_URL}/v1/shopping-list/${loggedInUser.groupId ? 'group/' : 'user/'}${loggedInUser.groupId ? loggedInUser.groupId : loggedInUser.id}`;
         axios.get<ShoppingItem[]>(shoppinglistUri)
             .then(response => {
                 setShoppingList(response.data);
@@ -58,7 +59,7 @@ export default function ShoppingList() {
     function addShoppingItem(name: string): void {
         if (shoppingList.findIndex(item => item.name === name) == -1) {
             const newItem = ShoppingItem.createShoppingItem(newItemName, loggedInUser)
-            axios.post<ShoppingItem[]>(`${API_URL}/shopping-list/`, newItem, {
+            axios.post<ShoppingItem[]>(`${API_URL}/v1/shopping-list/`, newItem, {
                 transformRequest: [(item) => {
                     return JSON.stringify([{
                         name: item.name,
@@ -99,18 +100,29 @@ export default function ShoppingList() {
 
         if (theItem) {
             theItem.bought = !theItem.bought;
-            InMemoryDb.storeObject("shopping-list", shoppingListCopy)
-                .then(e => {
-                    console.log("list saved", shoppingListCopy)
-                    setShoppingList(shoppingListCopy);
-                });
+            axios.put<ShoppingItem>(`${API_URL}/v1/shopping-list/`, theItem, {
+                transformRequest: [(item) => {
+                    return JSON.stringify({
+                        id: item.id,
+                        name: item.name,
+                        bought: item.bought
+                    });
+                }]
+            }).then(response => {
+                setShoppingList(shoppingListCopy);
+            }).catch(err => {
+                console.error(err);
+            });
         }
     }
 
-    function removeItem(itemToDelete: ShoppingItem, props: { size: number }) {
-        setShoppingList(shoppingList.filter(item => item.name !== itemToDelete.name));
-        InMemoryDb.storeObject("shopping-list", shoppingList)
-            .then(e => console.log("list saved"));
+    function removeItem(itemToDelete: ShoppingItem) {
+        axios.delete<ShoppingItem>(`${API_URL}/v1/shopping-list/${itemToDelete.id}`)
+            .then(() => {
+                setShoppingList(shoppingList.filter(item => item.name !== itemToDelete.name));
+            }).catch(err => {
+                console.error(err);
+            });
     }
 
     if (!shoppingList) {
@@ -133,12 +145,12 @@ export default function ShoppingList() {
                                     <Card.Title
                                         title={item.name}
                                         subtitle={"Added by: " + item.user.name}
-                                        left={(props) =>
+                                        left={() =>
                                             <IconButton
                                                 icon="delete"
                                                 iconColor={MD3Colors.error50}
                                                 size={20}
-                                                onPress={() => removeItem(item, props)}/>
+                                                onPress={() => removeItem(item)}/>
                                         }
                                         right={(props) =>
                                             <IconButton

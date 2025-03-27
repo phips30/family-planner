@@ -100,6 +100,7 @@ func (s *ShoppinglistRouter) updateItem(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(&shoppinglistItemUpdateRequestDto); err != nil {
 		log.Println("error parsing request")
 		http.Error(w, "error parsing request", http.StatusBadRequest)
+		return
 	}
 
 	err := s.service.UpdateItem(shoppinglistItemUpdateRequestDto.Id,
