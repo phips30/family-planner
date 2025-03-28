@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"context"
-	"family-planner/backend/internal/shoppinglist/domain"
+	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"log"
 
 	"github.com/google/uuid"
@@ -21,7 +21,7 @@ func NewShoppinglistQueryRepoImpl(ctx context.Context, mongoDbClient *mongo.Data
 	return &ShoppinglistQueryRepoImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
-func (s *ShoppinglistQueryRepoImpl) FindAllByGroupId(groupId uuid.UUID) ([]domain.ShoppinglistDto, error) {
+func (s *ShoppinglistQueryRepoImpl) FindAllByGroupId(groupId uuid.UUID) ([]entity.ShoppinglistItem, error) {
 	findOptions := options.Find()
 	filter := bson.M{"groupId": groupId.String()}
 	cursor, err := s.mongoDbCollection.Find(s.ctx, filter, findOptions)
@@ -35,7 +35,7 @@ func (s *ShoppinglistQueryRepoImpl) FindAllByGroupId(groupId uuid.UUID) ([]domai
 	return ExtractCursorIntoDomainObject(cursor, s.ctx)
 }
 
-func (s *ShoppinglistQueryRepoImpl) FindAllByUserId(userId uuid.UUID) ([]domain.ShoppinglistDto, error) {
+func (s *ShoppinglistQueryRepoImpl) FindAllByUserId(userId uuid.UUID) ([]entity.ShoppinglistItem, error) {
 	findOptions := options.Find()
 	filter := bson.M{"userId": userId.String()}
 	cursor, err := s.mongoDbCollection.Find(s.ctx, filter, findOptions)
@@ -49,21 +49,21 @@ func (s *ShoppinglistQueryRepoImpl) FindAllByUserId(userId uuid.UUID) ([]domain.
 	return ExtractCursorIntoDomainObject(cursor, s.ctx)
 }
 
-func (s *ShoppinglistQueryRepoImpl) FindById(itemId string) (*domain.ShoppinglistDto, error) {
+func (s *ShoppinglistQueryRepoImpl) FindById(itemId string) (*entity.ShoppinglistItem, error) {
 	objectId, err := primitive.ObjectIDFromHex(itemId)
 	if err != nil {
 		return nil, err
 	}
 
-	var item ShoppinglistMongoItem
+	var mongoItem ShoppinglistMongoItem
 	filter := bson.M{"_id": objectId}
-	err = s.mongoDbCollection.FindOne(s.ctx, filter).Decode(&item)
+	err = s.mongoDbCollection.FindOne(s.ctx, filter).Decode(&mongoItem)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
 		}
 		return nil, err
 	}
-	itemDto := MapToDto(item)
-	return &itemDto, nil
+	item, err := MapToDomainObject(mongoItem)
+	return item, err
 }

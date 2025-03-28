@@ -5,7 +5,7 @@ import (
 )
 
 type ShoppinglistCommandRepository interface {
-	Insert(shoppinglistItems []entity.ShoppinglistItem) error
+	Insert(shoppinglistItems []entity.ShoppinglistItem) ([]string, error)
 	Delete(itemId string) error
 	Update(shoppingItem entity.ShoppinglistItem) error
 }

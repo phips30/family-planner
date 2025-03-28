@@ -87,12 +87,12 @@ func (s *ShoppinglistRouter) addItems(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error parsing request", http.StatusBadRequest)
 	}
 
-	err := s.service.SaveShoppingList(s.mapToDomainObject(shoppinglistRequest))
+	insertedIds, err := s.service.SaveShoppingList(s.mapToDomainObject(shoppinglistRequest))
 	if err != nil {
 		log.Println("Error saving shopping list:", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(insertedIds)
 }
 
 func (s *ShoppinglistRouter) updateItem(w http.ResponseWriter, r *http.Request) {

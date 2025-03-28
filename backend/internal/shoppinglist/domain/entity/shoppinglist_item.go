@@ -1,8 +1,9 @@
 package entity
 
 import (
-	"family-planner/backend/internal/shoppinglist/domain"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ShoppinglistItemCreator struct {
@@ -28,67 +29,36 @@ func (s *ShoppinglistItem) SetName(itemName ItemName) {
 	s.Name = itemName
 }
 
-func NewShoppinglistItem(name ItemName, addedAt time.Time, user UserId, groupId GroupId, bought bool) (*ShoppinglistItem, error) {
+func NewShoppinglistItem(name string, addedAt time.Time, userId uuid.UUID, groupId uuid.UUID, bought bool) (*ShoppinglistItem, error) {
+	itemName, err := NewItemName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := NewUserId(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	group := NewGroupId(groupId)
+
 	if addedAt == (time.Time{}) {
 		addedAt = time.Now()
 	}
 	return &ShoppinglistItem{
-		Name:    name,
+		Name:    *itemName,
 		AddedAt: addedAt,
-		UserId:  user,
-		GroupId: groupId,
+		UserId:  *user,
+		GroupId: *group,
 		Bought:  bought,
 	}, nil
 }
 
-func NewShoppinglistItems(items []domain.ShoppinglistDto) *[]ShoppinglistItem {
-	var shoppinglistItems []ShoppinglistItem
-	for _, item := range items {
-		itemName, err := NewItemName(item.Name)
-		if err != nil {
-			break
-		}
-
-		userId, err := NewUserId(item.UserId)
-		if err != nil {
-			break
-		}
-
-		shoppinglistitem, err := NewShoppinglistItem(*itemName, item.AddedAt, *userId, *NewGroupId(item.GroupId), item.Bought)
-		if err == nil {
-			// Just omit wrong items for now
-			shoppinglistItems = append(shoppinglistItems, *shoppinglistitem)
-		}
-	}
-	return &shoppinglistItems
-}
-
-func FromExistingItems(items []domain.ShoppinglistDto) *[]ShoppinglistItem {
-	var shoppinglistItems []ShoppinglistItem
-	for _, item := range items {
-		shoppinglistItems = append(shoppinglistItems, *FromExistingItem(item))
-	}
-
-	return &shoppinglistItems
-}
-
-func FromExistingItem(item domain.ShoppinglistDto) *ShoppinglistItem {
-	itemName, err := NewItemName(item.Name)
+func FromExistingItem(id string, name string, addedAt time.Time, userId uuid.UUID, groupId uuid.UUID, bought bool) (*ShoppinglistItem, error) {
+	item, err := NewShoppinglistItem(name, addedAt, userId, groupId, bought)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-
-	userId, err := NewUserId(item.UserId)
-	if err != nil {
-		return nil
-	}
-
-	return &ShoppinglistItem{
-		Id:      item.Id,
-		Name:    *itemName,
-		AddedAt: item.AddedAt,
-		UserId:  *userId,
-		GroupId: *NewGroupId(item.GroupId),
-		Bought:  item.Bought,
-	}
+	item.Id = id
+	return item, nil
 }

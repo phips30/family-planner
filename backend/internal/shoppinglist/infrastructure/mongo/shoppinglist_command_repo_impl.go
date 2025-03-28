@@ -19,19 +19,23 @@ func NewShoppinglistCommandRepositoryImpl(ctx context.Context, mongoDbClient *mo
 	return &ShoppinglistRepositoryImpl{ctx: ctx, mongoDbCollection: mongoDbClient.Collection(MONGO_DB_COLLECTION)}
 }
 
-func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.ShoppinglistItem) error {
+func (s *ShoppinglistRepositoryImpl) Insert(shoppinglistItems []entity.ShoppinglistItem) ([]string, error) {
 	mongoShoppingListitems := MapToMongoBsonObject(shoppinglistItems)
 	result, err := s.mongoDbCollection.InsertMany(s.ctx, mongoShoppingListitems)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(result.InsertedIDs) == len(shoppinglistItems) {
-		return nil
+		idsAsString := make([]string, 0, len(result.InsertedIDs))
+		for _, id := range result.InsertedIDs {
+			idsAsString = append(idsAsString, id.(primitive.ObjectID).Hex())
+		}
+		return idsAsString, nil
 	}
 
-	return fmt.Errorf("could not insert all documents into mongodb")
+	return nil, fmt.Errorf("could not insert all documents into mongodb")
 }
 
 func (s *ShoppinglistRepositoryImpl) Update(shoppingItem entity.ShoppinglistItem) error {

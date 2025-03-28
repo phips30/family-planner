@@ -57,19 +57,16 @@ func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]Sho
 		return nil, errRetrievingListForUser
 	}
 
-	// This can be done in the repo already
-	domainItems := entity.FromExistingItems(items)
-
 	var userIds []uuid.UUID
 	for _, item := range items {
-		userIds = append(userIds, item.UserId)
+		userIds = append(userIds, item.UserId.UUID)
 	}
 	uniqueUserIds := s.getUniqueUserIds(userIds)
 	itemCreators, err := s.userDataPort.GetUserData(uniqueUserIds)
 
 	var shoppinglistItems []ShoppinglistItemResponse
 	var itemCreator ShoppinglistItemCreator
-	for _, item := range *domainItems {
+	for _, item := range items {
 		for _, user := range itemCreators {
 			if user.Id.UUID == item.UserId.UUID {
 				itemCreator = ShoppinglistItemCreator{Id: user.Id.UUID, Name: user.Name, Email: user.Email}
@@ -97,19 +94,16 @@ func (s *ShoppinglistService) LoadShoppingListForGroupId(groupId uuid.UUID) ([]S
 		return nil, errRetrievingListForGroup
 	}
 
-	// This can be done in the repo already
-	domainItems := entity.FromExistingItems(items)
-
 	var userIds []uuid.UUID
 	for _, item := range items {
-		userIds = append(userIds, item.UserId)
+		userIds = append(userIds, item.UserId.UUID)
 	}
 	uniqueUserIds := s.getUniqueUserIds(userIds)
 	itemCreators, err := s.userDataPort.GetUserData(uniqueUserIds)
 
 	var shoppinglistItems []ShoppinglistItemResponse
 	var itemCreator ShoppinglistItemCreator
-	for _, item := range *domainItems {
+	for _, item := range items {
 		for _, user := range itemCreators {
 			if user.Id.UUID == item.UserId.UUID {
 				itemCreator = ShoppinglistItemCreator{Id: user.Id.UUID, Name: user.Name, Email: user.Email}
@@ -142,47 +136,39 @@ func (s *ShoppinglistService) getUniqueUserIds(allUserIds []uuid.UUID) []uuid.UU
 	return uniqueUserIds
 }
 
-func (s *ShoppinglistService) SaveShoppingList(shoppinglist []domain.ShoppinglistDto) error {
+func (s *ShoppinglistService) SaveShoppingList(shoppinglist []domain.ShoppinglistDto) ([]string, error) {
 	var items []entity.ShoppinglistItem
 	for _, item := range shoppinglist {
-		name, err := entity.NewItemName(item.Name)
-		if err != nil {
-			break
-		}
-
-		userId, err := entity.NewUserId(item.UserId)
-		if err != nil {
-			break
-		}
-
 		newItem, err := entity.NewShoppinglistItem(
-			*name,
+			item.Name,
 			item.AddedAt,
-			*userId,
-			*entity.NewGroupId(item.GroupId),
+			item.UserId,
+			item.GroupId,
 			item.Bought,
 		)
+		if err != nil {
+			continue
+		}
 
 		items = append(items, *newItem)
-
 	}
 	return s.commandRepository.Insert(items)
 }
 
 func (s *ShoppinglistService) UpdateItem(itemId string, name string, bought bool) error {
 	item, err := s.queryRepository.FindById(itemId)
-	if err != nil || item == nil {
+	if err != nil || item == nil || item.Id == "" {
 		return errGettingItem
 	}
-	shoppingItem := entity.FromExistingItem(*item)
+
 	itemName, err := entity.NewItemName(name)
 	if err != nil {
 		return err
 	}
 
-	shoppingItem.SetName(*itemName)
-	shoppingItem.SetBought(bought)
-	return s.commandRepository.Update(*shoppingItem)
+	item.SetName(*itemName)
+	item.SetBought(bought)
+	return s.commandRepository.Update(*item)
 }
 
 func (s *ShoppinglistService) DeleteItem(itemId string) error {

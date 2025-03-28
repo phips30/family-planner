@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"context"
-	"family-planner/backend/internal/shoppinglist/domain"
 	"family-planner/backend/internal/shoppinglist/domain/entity"
 	"log"
 	"time"
@@ -12,7 +11,7 @@ import (
 )
 
 type ShoppinglistMongoItem struct {
-	Id      string    `bson:"_id"`
+	Id      string    `bson:"_id,omitempty"`
 	Name    string    `bson:"name"`
 	AddedAt time.Time `bson:"addedAt"`
 	UserId  string    `bson:"userId"`
@@ -20,8 +19,8 @@ type ShoppinglistMongoItem struct {
 	Bought  bool      `bson:"bought"`
 }
 
-func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([]domain.ShoppinglistDto, error) {
-	var shoppinglistDtos []domain.ShoppinglistDto
+func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([]entity.ShoppinglistItem, error) {
+	var shoppinglistItems []entity.ShoppinglistItem
 	for cursor.Next(ctx) {
 		var item ShoppinglistMongoItem
 		err := cursor.Decode(&item)
@@ -29,14 +28,19 @@ func ExtractCursorIntoDomainObject(cursor *mongo.Cursor, ctx context.Context) ([
 			log.Fatal(err)
 			return nil, err
 		}
-		shoppinglistDtos = append(shoppinglistDtos, MapToDto(item))
+		shoppinglistItemDO, err := MapToDomainObject(item)
+		if err != nil {
+			continue
+		} else {
+			shoppinglistItems = append(shoppinglistItems, *shoppinglistItemDO)
+		}
 	}
 
 	if err := cursor.Err(); err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
-	return shoppinglistDtos, nil
+	return shoppinglistItems, nil
 }
 
 func MapToMongoBsonObject(shoppinglistItems []entity.ShoppinglistItem) []interface{} {
@@ -54,15 +58,15 @@ func MapToMongoBsonObject(shoppinglistItems []entity.ShoppinglistItem) []interfa
 	return shoppinglistItemMongoInterfaces
 }
 
-func MapToDto(shoppinglistMongoItem ShoppinglistMongoItem) domain.ShoppinglistDto {
-	userId, _ := uuid.Parse(shoppinglistMongoItem.UserId)
-	groupId, _ := uuid.Parse(shoppinglistMongoItem.GroupId)
-	return domain.ShoppinglistDto{
-		Id:      shoppinglistMongoItem.Id,
-		Name:    shoppinglistMongoItem.Name,
-		AddedAt: shoppinglistMongoItem.AddedAt,
-		UserId:  userId,
-		GroupId: groupId,
-		Bought:  shoppinglistMongoItem.Bought,
-	}
+func MapToDomainObject(mongoItem ShoppinglistMongoItem) (*entity.ShoppinglistItem, error) {
+	userId, _ := uuid.Parse(mongoItem.UserId)
+	groupId, _ := uuid.Parse(mongoItem.GroupId)
+	return entity.FromExistingItem(
+		mongoItem.Id,
+		mongoItem.Name,
+		mongoItem.AddedAt,
+		userId,
+		groupId,
+		mongoItem.Bought,
+	)
 }
