@@ -4,9 +4,7 @@ import {
     IconButton, MD3Colors, ActivityIndicator
 } from 'react-native-paper';
 import React, {useContext, useEffect, useState} from 'react';
-import {router} from "expo-router";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {InMemoryDb} from "@/app/in-memory-key-value-store";
 import {User, UserContext} from "@/app/user.provider";
 import axios from "axios";
 import {API_URL} from "@/app/constants";
@@ -87,7 +85,7 @@ export default function ShoppingList() {
                         bought: item.bought
                     });
                 }]
-            }).then(response => {
+            }).then(() => {
                 setShoppingList(shoppingListCopy);
             }).catch(err => {
                 console.error(err);
@@ -131,7 +129,7 @@ export default function ShoppingList() {
                                                 size={20}
                                                 onPress={() => removeItem(item)}/>
                                         }
-                                        right={(props) =>
+                                        right={() =>
                                             <IconButton
                                                 icon={item.bought ? "check" : "crop-square"}
                                                 size={20}
