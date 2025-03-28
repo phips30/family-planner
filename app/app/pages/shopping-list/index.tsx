@@ -43,23 +43,12 @@ export default function ShoppingList() {
             .catch(err => {
                 console.error(err);
             });
-        /*
-        InMemoryDb.getData("shopping-list")
-            .then(e => {
-                console.log("shopping-list: " + e)
-                const shoppingListFromDb = JSON.parse(e) as ShoppingItem[];
-                setShoppingList(shoppingListFromDb);
-            })
-            .catch(e => {
-                console.error("not found: " + e)
-            });
-         */
     }, [])
 
     function addShoppingItem(name: string): void {
         if (shoppingList.findIndex(item => item.name === name) == -1) {
             const newItem = ShoppingItem.createShoppingItem(newItemName, loggedInUser)
-            axios.post<ShoppingItem[]>(`${API_URL}/v1/shopping-list/`, newItem, {
+            axios.post<string[]>(`${API_URL}/v1/shopping-list/`, newItem, {
                 transformRequest: [(item) => {
                     return JSON.stringify([{
                         name: item.name,
@@ -70,23 +59,13 @@ export default function ShoppingList() {
                     }]);
                 }]
             }).then(response => {
+                newItem.id = response.data[0];
                 setShoppingList([
                     ...shoppingList, newItem
                 ]);
-
             }).catch(err => {
                 console.error(err);
             });
-                /*
-            InMemoryDb.storeObject("shopping-list", updatedShoppingList)
-                .then(e => {
-                    console.log("list saved", updatedShoppingList)
-                    setShoppingList(updatedShoppingList);
-                    setNewItemName('');
-                    return axios.post<ShoppingItem[]>(`${API_URL}/shopping-list`, updatedShoppingList);
-                })
-                .then(httpResponse => console.log(httpResponse))
-                .catch(e => {console.log(e)});*/
         } else {
             setShoppingItemAlreadyExistsDlgVisible(true);
         }

@@ -51,7 +51,7 @@ func (s *ShoppinglistRouter) findListForUser(w http.ResponseWriter, r *http.Requ
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	var shoppinglistResponse []dto.ShoppinglistItemResponseDto
+	shoppinglistResponse := make([]dto.ShoppinglistItemResponseDto, 0)
 	for _, shoppinlistItem := range shoppinglistItems {
 		shoppinglistResponse = append(shoppinglistResponse, *s.mapFromDomainObject(shoppinlistItem))
 	}
@@ -72,7 +72,7 @@ func (s *ShoppinglistRouter) findListForGroup(w http.ResponseWriter, r *http.Req
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	var shoppinglistResponse []dto.ShoppinglistItemResponseDto
+	shoppinglistResponse := make([]dto.ShoppinglistItemResponseDto, 0)
 	for _, shoppinlistItem := range shoppinglistItems {
 		shoppinglistResponse = append(shoppinglistResponse, *s.mapFromDomainObject(shoppinlistItem))
 	}
