@@ -6,12 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type ShoppinglistItemCreator struct {
-	Id    UserId
-	Name  string
-	Email string
-}
-
 type ShoppinglistItem struct {
 	Id      string
 	Name    ItemName
@@ -46,10 +40,10 @@ func NewShoppinglistItem(name string, addedAt time.Time, userId uuid.UUID, group
 		addedAt = time.Now()
 	}
 	return &ShoppinglistItem{
-		Name:    *itemName,
+		Name:    itemName,
 		AddedAt: addedAt,
-		UserId:  *user,
-		GroupId: *group,
+		UserId:  user,
+		GroupId: group,
 		Bought:  bought,
 	}, nil
 }

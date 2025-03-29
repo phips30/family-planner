@@ -4,14 +4,10 @@ import "errors"
 
 type ItemName string
 
-func (i ItemName) ToString() string {
-	return string(i)
-}
-
-func NewItemName(name string) (*ItemName, error) {
+func NewItemName(name string) (ItemName, error) {
 	if name == "" {
-		return nil, errors.New("no name provided")
+		return "", errors.New("item name cannot be empty")
 	}
 	itemName := ItemName(name)
-	return &itemName, nil
+	return itemName, nil
 }

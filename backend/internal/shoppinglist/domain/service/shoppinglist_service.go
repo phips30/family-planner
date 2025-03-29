@@ -2,9 +2,9 @@ package service
 
 import (
 	"errors"
+	"family-planner/backend/internal/common/models"
 	"family-planner/backend/internal/shoppinglist/domain"
 	"family-planner/backend/internal/shoppinglist/domain/entity"
-	"family-planner/backend/internal/shoppinglist/domain/port"
 	"family-planner/backend/internal/shoppinglist/domain/repository"
 	"log"
 	"time"
@@ -13,9 +13,9 @@ import (
 )
 
 type ShoppinglistService struct {
-	commandRepository repository.ShoppinglistCommandRepository
-	queryRepository   repository.ShoppinglistQueryRepository
-	userDataPort      port.UserDataPort
+	commandRepository  repository.ShoppinglistCommandRepository
+	queryRepository    repository.ShoppinglistQueryRepository
+	userDataRepository repository.UserDataRepository
 }
 
 var (
@@ -26,31 +26,17 @@ var (
 	errNoItemIdProvided       = errors.New("error no item id provided")
 )
 
-type ShoppinglistItemCreator struct {
-	Id    uuid.UUID
-	Name  string
-	Email string
-}
-
-type ShoppinglistItemResponse struct {
-	Id      string
-	Name    string
-	AddedAt time.Time
-	User    ShoppinglistItemCreator
-	Bought  bool
-}
-
 func NewShoppinglistService(commandRepository repository.ShoppinglistCommandRepository,
 	queryRepository repository.ShoppinglistQueryRepository,
-	userDataPort port.UserDataPort) *ShoppinglistService {
+	userDataRepository repository.UserDataRepository) *ShoppinglistService {
 	return &ShoppinglistService{
-		commandRepository: commandRepository,
-		queryRepository:   queryRepository,
-		userDataPort:      userDataPort,
+		commandRepository:  commandRepository,
+		queryRepository:    queryRepository,
+		userDataRepository: userDataRepository,
 	}
 }
 
-func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]ShoppinglistItemResponse, error) {
+func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]domain.ShoppinglistItemResponse, error) {
 	items, err := s.queryRepository.FindAllByUserId(userid)
 	if err != nil {
 		log.Println(err.Error())
@@ -62,20 +48,20 @@ func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]Sho
 		userIds = append(userIds, item.UserId.UUID)
 	}
 	uniqueUserIds := s.getUniqueUserIds(userIds)
-	itemCreators, err := s.userDataPort.GetUserData(uniqueUserIds)
+	itemCreators, err := s.userDataRepository.GetUserData(uniqueUserIds)
 
-	var shoppinglistItems []ShoppinglistItemResponse
-	var itemCreator ShoppinglistItemCreator
+	var shoppinglistItems []domain.ShoppinglistItemResponse
+	var itemCreator models.UserDto
 	for _, item := range items {
 		for _, user := range itemCreators {
-			if user.Id.UUID == item.UserId.UUID {
-				itemCreator = ShoppinglistItemCreator{Id: user.Id.UUID, Name: user.Name, Email: user.Email}
+			if user.Id == item.UserId.UUID {
+				itemCreator = models.UserDto{Id: user.Id, Name: user.Name, Email: user.Email}
 				break
 			}
 		}
-		responseItem := &ShoppinglistItemResponse{
+		responseItem := &domain.ShoppinglistItemResponse{
 			Id:      item.Id,
-			Name:    item.Name.ToString(),
+			Name:    string(item.Name),
 			User:    itemCreator,
 			AddedAt: item.AddedAt,
 			Bought:  item.Bought,
@@ -87,7 +73,7 @@ func (s *ShoppinglistService) LoadShoppingListForUserId(userid uuid.UUID) ([]Sho
 	return shoppinglistItems, nil
 }
 
-func (s *ShoppinglistService) LoadShoppingListForGroupId(groupId uuid.UUID) ([]ShoppinglistItemResponse, error) {
+func (s *ShoppinglistService) LoadShoppingListForGroupId(groupId uuid.UUID) ([]domain.ShoppinglistItemResponse, error) {
 	items, err := s.queryRepository.FindAllByGroupId(groupId)
 	if err != nil {
 		log.Println(err.Error())
@@ -99,20 +85,20 @@ func (s *ShoppinglistService) LoadShoppingListForGroupId(groupId uuid.UUID) ([]S
 		userIds = append(userIds, item.UserId.UUID)
 	}
 	uniqueUserIds := s.getUniqueUserIds(userIds)
-	itemCreators, err := s.userDataPort.GetUserData(uniqueUserIds)
+	itemCreators, err := s.userDataRepository.GetUserData(uniqueUserIds)
 
-	var shoppinglistItems []ShoppinglistItemResponse
-	var itemCreator ShoppinglistItemCreator
+	var shoppinglistItems []domain.ShoppinglistItemResponse
+	var itemCreator models.UserDto
 	for _, item := range items {
 		for _, user := range itemCreators {
-			if user.Id.UUID == item.UserId.UUID {
-				itemCreator = ShoppinglistItemCreator{Id: user.Id.UUID, Name: user.Name, Email: user.Email}
+			if user.Id == item.UserId.UUID {
+				itemCreator = models.UserDto{Id: user.Id, Name: user.Name, Email: user.Email}
 				break
 			}
 		}
-		responseItem := &ShoppinglistItemResponse{
+		responseItem := &domain.ShoppinglistItemResponse{
 			Id:      item.Id,
-			Name:    item.Name.ToString(),
+			Name:    string(item.Name),
 			User:    itemCreator,
 			AddedAt: item.AddedAt,
 			Bought:  item.Bought,
@@ -166,7 +152,7 @@ func (s *ShoppinglistService) UpdateItem(itemId string, name string, bought bool
 		return err
 	}
 
-	item.SetName(*itemName)
+	item.SetName(itemName)
 	item.SetBought(bought)
 	return s.commandRepository.Update(*item)
 }

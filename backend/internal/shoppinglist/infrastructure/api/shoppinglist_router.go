@@ -127,7 +127,7 @@ func (s *ShoppinglistRouter) deleteItem(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem service.ShoppinglistItemResponse) *dto.ShoppinglistItemResponseDto {
+func (s *ShoppinglistRouter) mapFromDomainObject(shoppinglistItem domain.ShoppinglistItemResponse) *dto.ShoppinglistItemResponseDto {
 	return &dto.ShoppinglistItemResponseDto{
 		Id:      shoppinglistItem.Id,
 		Name:    shoppinglistItem.Name,

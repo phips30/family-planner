@@ -47,7 +47,7 @@ func MapToMongoBsonObject(shoppinglistItems []entity.ShoppinglistItem) []interfa
 	var shoppinglistItemMongoInterfaces []interface{}
 	for _, item := range shoppinglistItems {
 		shoppinglistMongoItem := ShoppinglistMongoItem{
-			Name:    item.Name.ToString(),
+			Name:    string(item.Name),
 			AddedAt: item.AddedAt,
 			UserId:  item.UserId.String(),
 			GroupId: item.GroupId.String(),

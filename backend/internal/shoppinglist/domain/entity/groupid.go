@@ -14,15 +14,15 @@ func (g GroupId) ToString() string {
 	return g.String()
 }
 
-func NewGroupId(id uuid.UUID) *GroupId {
+func NewGroupId(id uuid.UUID) GroupId {
 	groupId := GroupId{id}
-	return &groupId
+	return groupId
 }
 
-func NewGroupIdFromString(id string) (*GroupId, error) {
+func NewGroupIdFromString(id string) (GroupId, error) {
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse uuid: %s", id)
+		return GroupId{}, fmt.Errorf("could not parse uuid: %w", err)
 	}
 	return NewGroupId(uuid), nil
 }

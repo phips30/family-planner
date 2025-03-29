@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	shoppinglist "family-planner/backend/internal/shoppinglist/domain/entity"
+	"family-planner/backend/internal/common/models"
 	"log"
 
 	"fmt"
@@ -22,15 +22,15 @@ func NewUserDataAdapter(ctx context.Context, dbpool *pgxpool.Pool) *UserDataAdap
 }
 
 // TODO: Change return type
-func (u *UserDataAdapter) GetUserData(userIDs []uuid.UUID) ([]shoppinglist.ShoppinglistItemCreator, error) {
+func (u *UserDataAdapter) GetUserData(userIDs []uuid.UUID) ([]models.UserDto, error) {
 	query := `SELECT u.id, u.name, u.email FROM public.user u 
 	where u.id = ANY($1)`
 
-	var users []shoppinglist.ShoppinglistItemCreator
+	var users []models.UserDto
 	rows, err := u.dbpool.Query(u.ctx, query, userIDs)
 
 	for rows.Next() {
-		var user shoppinglist.ShoppinglistItemCreator
+		var user models.UserDto
 		err := rows.Scan(&user.Id, &user.Name, &user.Email)
 
 		if err != nil {
