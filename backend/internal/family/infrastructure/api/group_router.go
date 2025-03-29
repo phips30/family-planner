@@ -17,12 +17,12 @@ type GroupRouter struct {
 	service service.GroupService
 }
 
-type NewGroupDto struct {
+type NewGroupRequestDto struct {
 	GroupName string `json:"groupName"`
 	Email     string `json:"email"`
 }
 
-type GroupMemberDto struct {
+type GroupMemberRequestDto struct {
 	GroupId uuid.UUID `json:"groupId"`
 	Email   string    `json:"email"`
 }
@@ -52,7 +52,7 @@ func NewGroupRouter(router *mux.Router, service service.GroupService) *GroupRout
 }
 
 func (g *GroupRouter) createGroup(w http.ResponseWriter, r *http.Request) {
-	var newGroupRequest *NewGroupDto
+	var newGroupRequest *NewGroupRequestDto
 
 	if err := json.NewDecoder(r.Body).Decode(&newGroupRequest); err != nil {
 		log.Println("error")
@@ -72,7 +72,7 @@ func (g *GroupRouter) createGroup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GroupRouter) addGroupMember(w http.ResponseWriter, r *http.Request) {
-	var newGroupMemberRequest *GroupMemberDto
+	var newGroupMemberRequest *GroupMemberRequestDto
 
 	if err := json.NewDecoder(r.Body).Decode(&newGroupMemberRequest); err != nil {
 		log.Println("error")
