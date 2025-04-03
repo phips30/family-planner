@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"family-planner/backend/internal/common/config"
 	"family-planner/backend/internal/db"
 	familyService "family-planner/backend/internal/family/domain/service"
 	familyApi "family-planner/backend/internal/family/infrastructure/api"
@@ -19,17 +20,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// To be defined via ENV vars
-const PORT = "8080"
-
 var (
 	dbpool *pgxpool.Pool
 	ctx    context.Context = context.Background()
 )
 
 func main() {
+	// Load config vars
+	config.Init("../internal/common/config/.env")
+	cfg := config.GetConfig()
+
 	// Init postgres
-	dbpool, err := db.ConnectPostgres()
+	dbpool, err := db.ConnectPostgres(cfg.PostgresConnectionString)
 	if err != nil {
 		log.Fatal("Error connecting to postgres", err.Error())
 	} else {
@@ -44,7 +46,7 @@ func main() {
 	}
 
 	// Init mongodb
-	mongoDbClient, err := db.ConnectMongo()
+	mongoDbClient, err := db.ConnectMongo(cfg.MongoConnectionString, cfg.MongoDatabase, cfg.MongoUsername, cfg.MongoPassword)
 	if err != nil {
 		log.Fatal("Error connecting to mongo", err.Error())
 	} else {
@@ -77,8 +79,8 @@ func main() {
 	familyApi.NewGroupRouter(r, *groupService)
 	shoppinglistApi.NewShoppinglistRouter(r, mongoDbClient, shoppinglistService)
 
-	log.Printf("Starting server on port %s", PORT)
-	err = http.ListenAndServe(":"+PORT, handlers.CORS(headers, methods, origins)(r))
+	log.Printf("Starting server on port %s", cfg.Port)
+	err = http.ListenAndServe(":"+cfg.Port, handlers.CORS(headers, methods, origins)(r))
 	if err != nil {
 		log.Printf("Error starting server: %s", err)
 		os.Exit(1)

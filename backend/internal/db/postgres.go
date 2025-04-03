@@ -10,11 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const DB_CONNECTION_STRING = "postgres://postgres:postgres@localhost:5432/family_planner"
-
-func ConnectPostgres() (*pgxpool.Pool, error) {
+func ConnectPostgres(ConnectionString string) (*pgxpool.Pool, error) {
 	// Todo: make sure this is only called once and always returns the same dbpool after first init
-	dbpool, err := pgxpool.New(context.Background(), DB_CONNECTION_STRING)
+	dbpool, err := pgxpool.New(context.Background(), ConnectionString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection pool: %v", err)
 	}
