@@ -28,7 +28,7 @@ func main() {
 }
 
 func deployToLocalhost() {
-	cmd := exec.Command("docker", "compose", "-f", COMPOSE_FILE_PATH, "up", "-d")
+	cmd := exec.Command("sudo", "docker", "compose", "-f", COMPOSE_FILE_PATH, "up", "-d")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("Error: %s\nOutput: %s\n", err, string(output))
