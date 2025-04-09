@@ -27,7 +27,7 @@ var (
 
 func main() {
 	// Load config vars
-	config.Init("../internal/common/config/.env")
+	config.Init("./internal/common/config/.env")
 	cfg := config.GetConfig()
 
 	// Init postgres

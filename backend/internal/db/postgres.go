@@ -20,7 +20,7 @@ func ConnectPostgres(ConnectionString string) (*pgxpool.Pool, error) {
 }
 
 func InitDb(pool *pgxpool.Pool) error {
-	sqlfiles, err := filepath.Glob("../db/sql/*.sql")
+	sqlfiles, err := filepath.Glob("./db/sql/*.sql")
 	if err != nil {
 		return fmt.Errorf("err: %v", err)
 	}

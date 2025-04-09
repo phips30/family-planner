@@ -5,9 +5,10 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY *.go ./
+COPY . .
+RUN mv ./internal/common/config/.env.docker ./internal/common/config/.env
 
-RUN go build family-planner
+RUN go build -o ./family-planner ./cmd/main.go
 
 EXPOSE 8080
 
